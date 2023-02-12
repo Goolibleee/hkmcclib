@@ -1,12 +1,32 @@
 {
-    "loading":"Loading in progress...",
-    "noSheet":"❗ Could not find spreadsheet with today's date!",
-    "reloadPage":"Please create the spreadsheet for today and reload the app to check in!",
-    "loaded":"✅ Ready to check in!",
-    "noStudent":"❗ Student ID could not be found!",
-    "checkIn":"👋 Checked in {0} at {1}!",
-    "checkOut":"🚪 Checked out {0} at {1}!",
-    "alreadyDone":"🟡 {0} is already accounted for!",
-    "failedToOpen":"❗ Could not find data to use.",
-    "succeededToOpen":"✅ Found ID data."
+	"en": {
+		"checkOut": "Check Out",
+		"checkOutTitle": "Check Out Status",
+		"search": "Search",
+		"searchTitle": "Search",
+		"loading": "Loading DB",
+		"succeededToOpen" : "Succeeded to load",
+		"searchUser" : "Enter name or ID",
+		"searchBook" : "Enter book keywords",
+		"failedToOpen" : "Failed to open DB",
+		"checkedOut" : "Checked out",
+		"bookName" : "Book name",
+		"rentDate" : "Rent date",
+		"returnDate" : "Return date"
+	},
+	"kr": {
+		"checkOut": "대출기록",
+		"checkOutTitle": "대출 기록 조회",
+		"search": "도서검색",
+		"searchTitle": "도서 검색",
+		"loading": "DB 조회 중",
+		"succeededToOpen" : "DB 조회 완료",
+		"searchUser" : "이름 또는 회원번호를 입력하세요",
+		"searchBook" : "책 키워드를 입력하세요",
+		"failedToOpen": "DB 조회가 실패하였습니다",
+		"checkedOut" : " 대출중",
+		"bookName" : "도서명",
+		"rentDate" : "대출일",
+		"returnDate" : "반납일"	
+	}
 }

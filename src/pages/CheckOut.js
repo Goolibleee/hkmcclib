@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import Logo from "../images/logo.png";
 import { useDebounce } from "use-debounce";
 import { sleep, toastProp } from "../Util";
-import text from "../api/text";
 
 const selectedIds = new Set();
 
@@ -16,6 +15,8 @@ function CheckOut(props) {
     const [searchQuery] = useDebounce(inputText, 50);
     const [searchResults, setSearchResults] = useState([]);
     const [selectedId, selectIdImpl] = useState({code:-1});
+    const [doc, setDoc] = useState({})
+    const [text, setText] = useState({})
 
     useEffect(function () {
         async function initialize() {
@@ -23,6 +24,10 @@ function CheckOut(props) {
             while (!props.doc.isOpen()) {
                 await sleep(0.1);
             }
+            console.log("CheckOut initialize");
+            setDoc(props.doc);
+            setText(props.text);
+            console.log(props.text);
 
             const userSheet = await props.doc.sheetsByTitle('user');
             const rentSheet = await props.doc.sheetsByTitle('rent');
@@ -49,7 +54,8 @@ function CheckOut(props) {
                 console.log("Data should be loaded");
                 const prop = toastProp;
                 prop.autoClose = false;
-                initNoti = toast.info(text.loading, prop);
+                initNoti = toast.info(props.text.loading, prop);
+                console.log(props.text.loading);
             }
 
             console.log(bookSheet.header);
@@ -91,7 +97,7 @@ function CheckOut(props) {
                 const prop = toastProp;
                 prop.type = toast.TYPE.SUCCESS;
                 prop.autoClose = 3000;
-                prop.render = text.succeededToOpen;
+                prop.render = props.text.succeededToOpen;
                 toast.update(initNoti, prop);
             }
         }
@@ -210,7 +216,9 @@ function CheckOut(props) {
         return (<div key={result.code}><button type="button" id="searchResult" onClick={async () => {await selectId(result.code);}}> {result.text} </button>
                     <div hidden={hidden}>
                         <table><tbody>
-                        <tr><th id="bookname">Book name</th><th id="rentDate">Rent date</th><th id="returnDate">Return date</th></tr>
+                        <tr><th id="bookname">{props.text.bookName}</th>
+                            <th id="rentDate">{props.text.rentDate}</th>
+                            <th id="returnDate">{props.text.returnDate}</th></tr>
                         {
                             rented.map((rent) => {
                                 return showRented(rent);
@@ -225,11 +233,11 @@ function CheckOut(props) {
         <div id="checkOut">
             <div id="title">
                 <img id="logo" src={Logo} alt="HKMCC" ></img>
-                <h1>Check Out Status</h1>
+                <h1>{props.text.checkOutTitle}</h1>
             </div>
             <div id="checkOutInput" >
                 <input id="search"
-                    placeholder={"Search for name or enter a number..."}
+                    placeholder={props.text.searchUser}
                     value={inputText}
                     onChange={(event) => {
                         setInputText(event.target.value);

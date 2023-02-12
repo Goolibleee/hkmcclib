@@ -101,7 +101,7 @@ function Search(props) {
                         console.log(row.code);
                         let rent = ""
                         if (rentList.includes(row.code))
-                            rent = "Rent"
+                            rent = props.text.checkedOut;
                         let resultObject = {
                             text: resultString,
                             name: row.name,
@@ -123,7 +123,7 @@ function Search(props) {
             }
             query();
         },
-        [searchQuery, bookList, rentList]
+        [searchQuery, bookList, rentList, props]
     );
 
     useEffect(
@@ -162,11 +162,11 @@ function Search(props) {
         <div id="search">
             <div id="title">
                 <img id="logo" src={Logo} alt="HKMCC" ></img>
-                <h1> Search Books</h1>
+                <h1> {props.text.searchTitle} </h1>
             </div>
             <div id="searchContents" >
                 <input id="search"
-                    placeholder={"Search for book name..."}
+                    placeholder={props.text.searchBook}
                     value={inputText}
                     onChange={(event) => {
                         setInputText(event.target.value);
