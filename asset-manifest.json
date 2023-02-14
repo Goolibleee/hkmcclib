@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/hkmcclib/static/css/main.e1e64049.chunk.css",
-    "main.js": "/hkmcclib/static/js/main.2252b7cb.chunk.js",
-    "main.js.map": "/hkmcclib/static/js/main.2252b7cb.chunk.js.map",
+    "main.css": "/hkmcclib/static/css/main.cca9e88f.chunk.css",
+    "main.js": "/hkmcclib/static/js/main.8b89e36c.chunk.js",
+    "main.js.map": "/hkmcclib/static/js/main.8b89e36c.chunk.js.map",
     "runtime-main.js": "/hkmcclib/static/js/runtime-main.52e2eba7.js",
     "runtime-main.js.map": "/hkmcclib/static/js/runtime-main.52e2eba7.js.map",
     "static/css/2.b28305bc.chunk.css": "/hkmcclib/static/css/2.b28305bc.chunk.css",
@@ -12,14 +12,14 @@
     "static/js/3.0c0ad4f8.chunk.js.map": "/hkmcclib/static/js/3.0c0ad4f8.chunk.js.map",
     "index.html": "/hkmcclib/index.html",
     "static/css/2.b28305bc.chunk.css.map": "/hkmcclib/static/css/2.b28305bc.chunk.css.map",
-    "static/css/main.e1e64049.chunk.css.map": "/hkmcclib/static/css/main.e1e64049.chunk.css.map",
+    "static/css/main.cca9e88f.chunk.css.map": "/hkmcclib/static/css/main.cca9e88f.chunk.css.map",
     "static/js/2.23405e11.chunk.js.LICENSE.txt": "/hkmcclib/static/js/2.23405e11.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.52e2eba7.js",
     "static/css/2.b28305bc.chunk.css",
     "static/js/2.23405e11.chunk.js",
-    "static/css/main.e1e64049.chunk.css",
-    "static/js/main.2252b7cb.chunk.js"
+    "static/css/main.cca9e88f.chunk.css",
+    "static/js/main.8b89e36c.chunk.js"
   ]
 }
