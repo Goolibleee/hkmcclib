@@ -1,0 +1,56 @@
+.navbar {
+    position: relative;
+    height: 65px;
+    display: flex;
+    font-size: 10px;
+}
+
+.img {
+    height: 1em;
+    position: relative;
+    top: 10px;
+}
+
+.menu {
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 35px;
+    margin-right: 1rem;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    font-size: 32px;
+    text-shadow: 2px 2px #000;
+}
+
+.title {
+    width: 100%;
+    display: flex;
+    justify-content: left;
+    flex-direction: row;
+    margin-left: 1rem;
+    border: hidden;
+    font-size: 1.2rem;
+    text-align: left;
+    padding-top: 9px;
+}
+
+@media screen and (max-width: 1000px) {
+    .menu {
+        margin-right: 1rem;
+    }
+
+    #logo {
+        display: none;
+    }
+    .title {
+    }
+    .img {
+        top: 10px;
+    }
+}
+
+

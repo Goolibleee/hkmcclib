@@ -21,7 +21,7 @@ String.prototype.format = function() {
 }
 
 export const toastProp = {
-    position: "top-center",
+    position: "bottom-center",
     autoClose: 3000,
     hideProgressBar: true,
     closeOnClick: true,
@@ -29,3 +29,6 @@ export const toastProp = {
     draggable: true,
     progress: undefined
 }
+
+export const loadingId = "custom-loading-id";
+export const loggingId = "custom-logging-id";

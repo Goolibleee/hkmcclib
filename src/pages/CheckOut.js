@@ -1,253 +1,309 @@
 import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { toast } from "react-toastify";
-import Logo from "../images/logo.png";
-import { useDebounce } from "use-debounce";
-import { sleep, toastProp } from "../Util";
+import { toastProp, loggingId } from "../Util";
+import { useLazyQuery } from "@apollo/client";
+import gql from "graphql-tag";
+import { Link } from 'react-router-dom'
+import config from "../api/config";
 
-const selectedIds = new Set();
+const NodeRSA = require('node-rsa');
+
+const USER_QUERY = gql`
+    query FindUser($_id: String!){
+        user (query: {_id:$_id}) {
+            _id
+            name
+            encrypted_email
+            encrypted_phone
+        }
+    }`;
+
+const HISTORY_QUERY = gql`
+    query findLogs($user_id: String!){
+        rentLogs (query: {user_id: $user_id}) {
+            _id
+            book_id
+            book_state
+            timestamp
+            user_id
+        }
+    }`;
+
+const prk = new NodeRSA(config["privateKey"]);
+
+const State = {
+    LoggedOut: 0,
+    LoggingIn: 1,
+    LoggedIn:  2
+}
 
 function CheckOut(props) {
-    const [inputText, setInputText] = useState("");
-    const [studentList, setStudentList] = useState([]);
-    const [rentList, setRentList] = useState([]);
-    const [bookList, setBookList] = useState([]);
-    const [searchQuery] = useDebounce(inputText, 50);
+    const [userText, setUserText] = useState("");
+    const [passwordText, setPasswordText] = useState("");
     const [searchResults, setSearchResults] = useState([]);
-    const [selectedId, selectIdImpl] = useState({code:-1});
-    const [doc, setDoc] = useState({})
-    const [text, setText] = useState({})
+    const [initialized, setInitialized] = useState(false);
+    const [userId, setUserId] = useState("");
+    const [state, setState] = useState(State.LoggedOut);
+    const [history, setHistory] = useState([]);
+    const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY,
+                     { "variables": { "_id": userId } });
+    const [loadHistory, { data: historyData }] = useLazyQuery(HISTORY_QUERY,
+                     { "variables": { "user_id": userId } });
 
     useEffect(function () {
         async function initialize() {
-            toast.dismiss();
-            while (!props.doc.isOpen()) {
-                await sleep(0.1);
-            }
+            if (props.doc.isOpen())
+                updateDoc(false);
+            else
+                props.doc.setCallback(updateDoc);
+            console.log("=======================================");
             console.log("CheckOut initialize");
-            setDoc(props.doc);
-            setText(props.text);
-            console.log(props.text);
 
-            const userSheet = await props.doc.sheetsByTitle('user');
-            const rentSheet = await props.doc.sheetsByTitle('rent');
-            const bookSheet = await props.doc.sheetsByTitle('book');
-            if (!userSheet || !rentSheet || !bookSheet)
-            {
-                const prop = toastProp;
-                prop.autoClose = 3000;
-                toast.error(text.failedToOpen, prop);
-                return;
-            }
-            console.log(userSheet.header);
-            console.log(userSheet.header["name"]);
-            const cachedUserData = props.doc.getCachedList("user");
-            const cachedRentData = props.doc.getCachedList("rent");
-            let initNoti = null;
-            if (!cachedUserData.has(userSheet.header.code.toString()) ||
-                !cachedUserData.has(userSheet.header.name.toString()) ||
-                !cachedRentData.has(rentSheet.header.barcode.toString()) ||
-                !cachedRentData.has(rentSheet.header.user.toString()) ||
-                !cachedRentData.has(rentSheet.header.rentDate.toString()) ||
-                !cachedRentData.has(rentSheet.header.returnDate.toString()) )
-            {
-                console.log("Data should be loaded");
-                const prop = toastProp;
-                prop.autoClose = false;
-                initNoti = toast.info(props.text.loading, prop);
-                console.log(props.text.loading);
-            }
-
-            console.log(bookSheet.header);
-
-            console.log(userSheet.name);
-            let userLists;
-            userLists = await props.doc.readList("user", [userSheet.header.code,
-                                                          userSheet.header.name]);
-            const codeList = userLists[0];
-            const nameList = userLists[1];
-
-            let rentLists;
-            rentLists = await props.doc.readList("rent", [rentSheet.header.barcode,
-                                                          rentSheet.header.user,
-                                                          rentSheet.header.rentDate,
-                                                          rentSheet.header.returnDate]);
-            const rentedList = rentLists[0];
-            const renterList = rentLists[1];
-            const rentDates = rentLists[2];
-            const returnDates = rentLists[3];
-
-            const userList = [];
-            const rentList = [];
-            for (let i = 0 ; i < Math.min(codeList.length, nameList.length); i++)
-            {
-               userList.push({code: codeList[i],  name: nameList[i]});
-            }
-            setStudentList(userList);
-            for (let i = 0 ; i < Math.min(codeList.length, nameList.length); i++)
-            {
-               rentList.push({code: rentedList[i],  user: renterList[i], rentDate: rentDates[i], returnDate: returnDates[i]});
-            }
-            setRentList(rentList);
-
-            loadBook(bookSheet.header);
-
-            console.log("Sheet read " + userList.length);
-            if (initNoti) {
-                const prop = toastProp;
-                prop.type = toast.TYPE.SUCCESS;
-                prop.autoClose = 3000;
-                prop.render = props.text.succeededToOpen;
-                toast.update(initNoti, prop);
-            }
         }
+
         initialize();
-        return () => toast.dismiss();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(
         () => {
-            async function findStudents(text) {
-                let results = [];
-
-                for (const row of studentList) {
-                    if (results.length > 4) break;
-                    if ((row.code && row.code.toString().includes(text)) ||
-                        (row.name && row.name.toString().includes(text)))
-                    {
-                        let resultString = `${row.code}: ${row.name}`;
-                        let resultObject = {
-                            code: row.code,
-                            name: row.name,
-                            text: resultString,
-                        };
-                        results.push(resultObject);
-                        selectedIds.add(row.code);
-                    }
-                }
-                return results;
-            }
-            async function query() {
-                if (searchQuery) {
-                    let sr = await findStudents(searchQuery);
-                    if (sr.length > 0)
-                    {
-                        setSearchResults(sr);
-                    }
-                    else
-                    {
-                        console.log("No matching student");
-                        setSearchResults([]);
-                    }
-                } else {
-                    console.log("No matching student");
-                    setSearchResults([]);
-                }
-            }
-            query();
+            console.log("User data updated ");
+            compare();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [searchQuery, studentList]
+        [userData]
     );
 
-    const selectId = async (code) => {
-//        const info = await props.doc.getStudent(code);
-        console.log("Select " + selectedId.code + " " + code);
-        console.log(selectedId);
-        if (!selectedId || !selectedId.code || selectedId.code !== code)
+    useEffect(
+        () => {
+            let rawHist = [];
+            if (!historyData)
+                return;
+            console.log("History updated ");
+//            console.log(historyData);
+            for (let i = 0 ; i < historyData["rentLogs"].length ; i++)
+            {
+                const entry = historyData["rentLogs"][i];
+                if (entry["book_state"] !== "0" && entry["book_state"] !== "1")
+                    continue;
+                const id = entry["book_id"];
+                const date = entry["timestamp"].split(" ")[0].replace("-", "/", 2).replace("-", "/")
+                rawHist.push({"id": id, "title": props.doc.book[id]["title"], "date": date, "state": entry["book_state"]});
+            }
+            rawHist.sort((s1, s2) => { return s1["date"] > s2["date"]; });
+//            console.log(rawHist);
+
+            let hist = [];
+            for (let i = 0 ; i < rawHist.length - 1 ; i++)
+            {
+                if (rawHist[i]["state"] !== "1")
+                    continue;
+                const entry  = rawHist[i];
+                const id = entry["id"];
+                for (let j = i+1 ; j < rawHist.length ; j++)
+                {
+                    if (rawHist[j]["state"] !== "0" || id !== rawHist[j]["id"])
+                        continue;
+                    hist.push({"id": entry["id"], "title": entry["title"], "rentDate": entry["date"], "retDate": rawHist[j]["date"]});
+                    break;
+                }
+            }
+//            console.log(hist);
+            console.log("Set history");
+            setHistory(hist);
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [historyData]
+    );
+
+    async function updateDoc(notify = true)
+    {
+        console.log("All data loaded " + initialized);
+        if (props.doc.logged)
         {
-            console.log("Selected");
-//            console.log(info);
-            selectIdImpl({code:code});
+            setState(State.LoggedIn);
+            const userId = props.doc.userInfo['_id'];
+            setUserId(userId);
+            setSearchResults(props.doc.getRent(userId));
+            await loadHistory();
         }
-        else
+
+        if (notify)
         {
-            console.log("Deselect");
-            selectIdImpl({code:-1});
+            const prop = toastProp;
+            prop.type = toast.TYPE.SUCCESS;
+            prop.render = props.text.succeededToOpen;
+            prop.autoClose = 3000;
+            prop.toastId = "";
+            toast.info(props.text.succeededToOpen, prop);
         }
+        console.log("Done");
+        setInitialized(true);
     }
 
-    const showRented = (rent) => {
-        const rentDate = rent.rentDate.split(' ')[0];
-        console.log(rentDate);
-        let bookName = "";
-        for (let i = 0 ; i < bookList.length ; i++)
-        {
-            if (bookList[i].code === rent.code)
-                bookName = bookList[i].name;
-        }
-        return (<tr key = {rent.code}>
-                    <td> {bookName} </td>
-                    <td> {rentDate} </td>
-                    <td> {rent.returnDate} </td>
-                </tr>);
-    }
-
-    const loadBook = async (header) => {
-        let bookLists;
-        bookLists = await props.doc.readList("book", [header.barcode,
-                                                      header.name]);
-        const bookCodes = bookLists[0];
-        const bookNames = bookLists[1];
-
-        for (let i = 0 ; i < bookCodes.length; i++)
-        {
-           bookList.push({code: bookCodes[i], name: bookNames[i]})
-        }
-        setBookList(bookList);
-        console.log("Book loaded " + bookList.length.toString());
+    const showRented = (rent, index) => {
+        const id = rent["id"];
+        const rentDate = rent["rentDate"];
+        const retDate = rent["retDate"];
+        const bookName = rent["title"];
+        return (<><tr key={index} className="bookData">
+                    <td className="bookData"><Link to={"/search/"+id}>{id}</Link></td>
+                    <td className="bookData">{rentDate}</td>
+                    <td className="bookData">{retDate}</td>
+                </tr>
+                <tr key={index.toString() + "Title"} className="bookName">
+                    <td colSpan="3" className="bookName">{bookName}</td>
+                </tr></>);
     }
 
     const showEntries = (result) => {
-        const hidden = (selectedId.code !== result.code);
-        let rented = []
-        if (!hidden)
-        {
-            for (let rent of rentList)
+        return (<div>
+                    <table><tbody>
+                    <tr>
+                        <th id="id">{props.text.id}</th>
+                        <th id="rentDate">{props.text.rentDate}</th>
+                        <th id="returnDate">{props.text.returnDate}</th>
+                    </tr>
+                    {
+                        result.map((rent, index) => {
+                            return showRented(rent, index);
+                        })
+                    }
+                    {
+                        result.length === 0 && <tr key="None"><td colSpan="3">{props.text.noEntry}</td></tr>
+                    }
+                    </tbody></table>
+                </div>);
+    }
+
+    const logIn = async () => {
+        setState(State.LoggingIn);
+        setUserId(userText.toUpperCase());
+        await loadUser();
+        await loadHistory();
+        console.log("Log In");
+        compare();
+    }
+
+    const logOut = async () => {
+        setUserId("");
+        console.log("Log Out");
+        props.doc.logOut();
+        setState(State.LoggedOut);
+        const passwordInput = document.getElementById("searchPassword");
+        passwordInput.value = "";
+        setPasswordText("");
+    }
+
+    function compare() {
+        if (!userData || state === State.LoggedOut)
+            return;
+
+        var matched = false;
+        if (userData.user && passwordText.length > 0) {
+            console.log("User data available");
+            const emailDb = userData.user.encrypted_email;
+            const phoneDb = userData.user.encrypted_phone;
+
+            const passwordTyped = prk.sign(passwordText, 'base64');
+            if (emailDb === passwordTyped)
             {
-                if (rent.user === result.code)
+//                console.log("Email match");
+                matched = true;
+            }
+            else
+            {
+                var numberString = "";
+                for (let i = 0 ; i < passwordText.length ; i++)
                 {
-                    console.log(rent);
-                    rented.push(rent);
+                    if (!isNaN(passwordText[i]))
+                        numberString += passwordText[i];;
+                }
+                const passwordTyped = prk.sign(numberString, 'base64');
+                if (passwordTyped === phoneDb)
+                {
+//                    console.log("Phone match");
+                    matched = true;
+                }
+                else
+                {
+//                    console.log("Nothing matched");
                 }
             }
+
+//            console.log("toast available");
         }
-        return (<div key={result.code}><button type="button" id="searchResult" onClick={async () => {await selectId(result.code);}}> {result.text} </button>
-                    <div hidden={hidden}>
-                        <table><tbody>
-                        <tr><th id="bookname">{props.text.bookName}</th>
-                            <th id="rentDate">{props.text.rentDate}</th>
-                            <th id="returnDate">{props.text.returnDate}</th></tr>
-                        {
-                            rented.map((rent) => {
-                                return showRented(rent);
-                            })
-                        }
-                        </tbody></table>
-                    </div>
-                </div>);
+        console.log(toast.isActive(loggingId));
+        const prop = toastProp;
+        let text;
+        if (matched)
+        {
+            props.doc.logIn(userData.user);
+
+            setSearchResults(props.doc.getRent(userId));
+            setState(State.LoggedIn);
+            prop.type = toast.TYPE.SUCCESS;
+            text = props.text.logInSucceed;
+        }
+        else
+        {
+            prop.type = toast.TYPE.ERROR;
+            text = props.text.logInFail;
+        }
+        prop.render = text;
+        prop.autoClose = 3000;
+        prop.toastId = loggingId;
+        if (toast.isActive(loggingId))
+        {
+            console.log("update toast");
+            toast.update(loggingId, prop);
+        }
+        else
+        {
+            console.log("New toast");
+            toast.info(text, prop);
+        }
     }
 
     return (
         <div id="checkOut">
             <div id="title">
-                <img id="logo" src={Logo} alt="HKMCC" ></img>
-                <h1>{props.text.checkOutTitle}</h1>
+                <h2>{props.text.checkOutTitle}</h2>
             </div>
-            <div id="checkOutInput" >
-                <input id="search"
-                    placeholder={props.text.searchUser}
-                    value={inputText}
-                    onChange={(event) => {
-                        setInputText(event.target.value);
+            <div id="checkOutInput" hidden={state === State.LoggedIn}>
+                <input type="text" id="searchInput"
+                    placeholder={props.text.idHolder}
+                    value={userText}
+                    disabled={!initialized}
+                    onInput={(event) => {
+                        setUserText(event.target.value);
                     }} />
+                <input type="password" id="searchPassword"
+                    placeholder={props.text.pwHolder}
+                    value={passwordText}
+                    disabled={!initialized}
+                    onInput={(event) => {
+                        setPasswordText(event.target.value);
+                    }} />
+               <button id="logIn" onClick={async () => logIn()}> {props.text.logIn} </button>
+            </div>
+            <div id="checkOutResult" hidden={state !== State.LoggedIn}>
+                <div id="checkOutUser">
+                    <div id="name"> {props.doc.userInfo["_id"] + " : " + props.doc.userInfo["name"] + props.text.nameSuffix}
+                    </div>
+                    <div id="logOut">
+                        <button id="logOutButton" onClick={async () => logOut()}> {props.text.logOut} </button>
+                    </div>
+                </div>
+                <div>
+                    { showEntries(searchResults) }
+                </div>
 
-                {
-                    searchResults.map((result) => {
-                        return showEntries(result);
-                    })
-                }
+                <div id="name">{props.text.history}</div>
+                <div>
+                    { showEntries(history) }
+                </div>
             </div>
         </div>
     );
