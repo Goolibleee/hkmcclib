@@ -1,25 +1,26 @@
 {
   "files": {
-    "main.css": "/hkmcclib/static/css/main.8d9513b2.chunk.css",
-    "main.js": "/hkmcclib/static/js/main.80ebe509.chunk.js",
-    "main.js.map": "/hkmcclib/static/js/main.80ebe509.chunk.js.map",
-    "runtime-main.js": "/hkmcclib/static/js/runtime-main.a83df9d7.js",
-    "runtime-main.js.map": "/hkmcclib/static/js/runtime-main.a83df9d7.js.map",
+    "main.css": "/hkmcclib/static/css/main.d9871e1b.chunk.css",
+    "main.js": "/hkmcclib/static/js/main.c7ec91ae.chunk.js",
+    "main.js.map": "/hkmcclib/static/js/main.c7ec91ae.chunk.js.map",
+    "runtime-main.js": "/hkmcclib/static/js/runtime-main.7ed94fa0.js",
+    "runtime-main.js.map": "/hkmcclib/static/js/runtime-main.7ed94fa0.js.map",
     "static/css/2.b28305bc.chunk.css": "/hkmcclib/static/css/2.b28305bc.chunk.css",
-    "static/js/2.3c39d455.chunk.js": "/hkmcclib/static/js/2.3c39d455.chunk.js",
-    "static/js/2.3c39d455.chunk.js.map": "/hkmcclib/static/js/2.3c39d455.chunk.js.map",
-    "static/js/3.c2d3133d.chunk.js": "/hkmcclib/static/js/3.c2d3133d.chunk.js",
-    "static/js/3.c2d3133d.chunk.js.map": "/hkmcclib/static/js/3.c2d3133d.chunk.js.map",
+    "static/js/2.9251d509.chunk.js": "/hkmcclib/static/js/2.9251d509.chunk.js",
+    "static/js/2.9251d509.chunk.js.map": "/hkmcclib/static/js/2.9251d509.chunk.js.map",
+    "static/js/3.02ffb521.chunk.js": "/hkmcclib/static/js/3.02ffb521.chunk.js",
+    "static/js/3.02ffb521.chunk.js.map": "/hkmcclib/static/js/3.02ffb521.chunk.js.map",
     "index.html": "/hkmcclib/index.html",
     "static/css/2.b28305bc.chunk.css.map": "/hkmcclib/static/css/2.b28305bc.chunk.css.map",
-    "static/css/main.8d9513b2.chunk.css.map": "/hkmcclib/static/css/main.8d9513b2.chunk.css.map",
-    "static/js/2.3c39d455.chunk.js.LICENSE.txt": "/hkmcclib/static/js/2.3c39d455.chunk.js.LICENSE.txt"
+    "static/css/main.d9871e1b.chunk.css.map": "/hkmcclib/static/css/main.d9871e1b.chunk.css.map",
+    "static/js/2.9251d509.chunk.js.LICENSE.txt": "/hkmcclib/static/js/2.9251d509.chunk.js.LICENSE.txt",
+    "static/media/Home.css": "/hkmcclib/static/media/libraryPic2.6eafa278.JPG"
   },
   "entrypoints": [
-    "static/js/runtime-main.a83df9d7.js",
+    "static/js/runtime-main.7ed94fa0.js",
     "static/css/2.b28305bc.chunk.css",
-    "static/js/2.3c39d455.chunk.js",
-    "static/css/main.8d9513b2.chunk.css",
-    "static/js/main.80ebe509.chunk.js"
+    "static/js/2.9251d509.chunk.js",
+    "static/css/main.d9871e1b.chunk.css",
+    "static/js/main.c7ec91ae.chunk.js"
   ]
 }
