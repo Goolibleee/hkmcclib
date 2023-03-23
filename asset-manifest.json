@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/hkmcclib/static/css/main.e9d58d20.chunk.css",
-    "main.js": "/hkmcclib/static/js/main.858fe443.chunk.js",
-    "main.js.map": "/hkmcclib/static/js/main.858fe443.chunk.js.map",
+    "main.js": "/hkmcclib/static/js/main.bf7e540a.chunk.js",
+    "main.js.map": "/hkmcclib/static/js/main.bf7e540a.chunk.js.map",
     "runtime-main.js": "/hkmcclib/static/js/runtime-main.8f3c56ce.js",
     "runtime-main.js.map": "/hkmcclib/static/js/runtime-main.8f3c56ce.js.map",
     "static/css/2.b28305bc.chunk.css": "/hkmcclib/static/css/2.b28305bc.chunk.css",
@@ -21,6 +21,6 @@
     "static/css/2.b28305bc.chunk.css",
     "static/js/2.1fee3d87.chunk.js",
     "static/css/main.e9d58d20.chunk.css",
-    "static/js/main.858fe443.chunk.js"
+    "static/js/main.bf7e540a.chunk.js"
   ]
 }
