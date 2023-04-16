@@ -38,6 +38,19 @@ h1 {
     padding-top: 9px;
 }
 
+.login, .login:visited {
+    color: #fff;
+    width: 100%;
+    display: flex;
+    justify-content: left;
+    flex-direction: row;
+    border: hidden;
+    font-size: 1.2rem;
+    text-align: left;
+    padding-top: 9px;
+    margin: 5px;
+}
+
 @media screen and (max-width: 1000px) {
     .menu {
         margin-right: 1rem;

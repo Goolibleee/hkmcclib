@@ -3,34 +3,8 @@ import "./Page.css"
 import { toast } from "react-toastify";
 import { toastProp, loggingId } from "../Util";
 import { useLazyQuery } from "@apollo/client";
-import gql from "graphql-tag";
 import { Link } from 'react-router-dom'
-import config from "../api/config";
-
-const NodeRSA = require('node-rsa');
-
-const USER_QUERY = gql`
-    query FindUser($_id: String!){
-        user (query: {_id:$_id}) {
-            _id
-            name
-            encrypted_email
-            encrypted_phone
-        }
-    }`;
-
-const HISTORY_QUERY = gql`
-    query findLogs($user_id: String!){
-        rentLogs (query: {user_id: $user_id}) {
-            _id
-            book_id
-            book_state
-            timestamp
-            user_id
-        }
-    }`;
-
-const prk = new NodeRSA(config["privateKey"]);
+import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
 
 const State = {
     LoggedOut: 0,
@@ -46,10 +20,12 @@ function CheckOut(props) {
     const [userId, setUserId] = useState("");
     const [state, setState] = useState(State.LoggedOut);
     const [history, setHistory] = useState([]);
+    const [autoLogin, setAutoLogin] = useState(false);
     const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY,
                      { "variables": { "_id": userId } });
     const [loadHistory, { data: historyData }] = useLazyQuery(HISTORY_QUERY,
                      { "variables": { "user_id": userId } });
+    const [expireDate, setExpireDate] = useState("");
 
     useEffect(function () {
         async function initialize() {
@@ -60,11 +36,30 @@ function CheckOut(props) {
             console.log("=======================================");
             console.log("CheckOut initialize");
 
+
+            if ("autoLogin" in props.context.cookie)
+            {
+                const autoLogin = (props.context.cookie.autoLogin === "true") ? true : false;
+                setAutoLogin(autoLogin);
+            }
+            const date = new Date();
+            const days=2;
+            date.setTime(date.getTime()+(days*24*60*60*1000));
+            setExpireDate(date.toGMTString());
         }
 
         initialize();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(
+        () => {
+            console.log("User data updated ");
+            updateDoc(false);
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [props.logged]
+    );
 
     useEffect(
         () => {
@@ -78,7 +73,7 @@ function CheckOut(props) {
     useEffect(
         () => {
             let rawHist = [];
-            if (!historyData)
+            if (!historyData || !props.doc.bookReady || !props.doc.rentReady)
                 return;
             console.log("History updated ");
 //            console.log(historyData);
@@ -114,7 +109,7 @@ function CheckOut(props) {
             setHistory(hist);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [historyData]
+        [historyData, props.doc.bookReady, props.doc.rentReady]
     );
 
     async function updateDoc(notify = true)
@@ -127,6 +122,12 @@ function CheckOut(props) {
             setUserId(userId);
             setSearchResults(props.doc.getRent(userId));
             await loadHistory();
+        }
+        else
+        {
+            setState(State.LoggedOut);
+            setUserId("");
+            setPasswordText("");
         }
 
         if (notify)
@@ -147,20 +148,33 @@ function CheckOut(props) {
         const rentDate = rent["rentDate"];
         const retDate = rent["retDate"];
         const bookName = rent["title"];
-        return (<><tr key={index} className="bookData">
-                    <td className="bookData"><Link to={"/search/"+id}>{id}</Link></td>
-                    <td className="bookData">{rentDate}</td>
-                    <td className="bookData">{retDate}</td>
-                </tr>
-                <tr key={index.toString() + "Title"} className="bookName">
-                    <td colSpan="3" className="bookName">{bookName}</td>
-                </tr></>);
+        const key = index.toString();
+        return (<React.Fragment key={key + "Fragment"}>
+                    <tr key={key} className="bookData">
+                        <td className="bookData"><Link to={"/search/"+id}>{id}</Link></td>
+                        <td className="bookData">{rentDate}</td>
+                        <td className="bookData">{retDate}</td>
+                    </tr>
+                    <tr key={key + "Title"} className="bookName">
+                        <td colSpan="3" className="bookName">{bookName}</td>
+                    </tr>
+                </React.Fragment>
+                );
+    }
+
+
+    const toggleAutoLogin = () => {
+        console.log("Toggle autoLogin");
+        const cookieString = "autoLogin=" + (autoLogin ? "false":"true") + "; expires=" + expireDate + ";";
+        console.log(cookieString);
+        document.cookie = cookieString;
+        setAutoLogin(!autoLogin);
     }
 
     const showEntries = (result) => {
         return (<div>
                     <table><tbody>
-                    <tr>
+                    <tr key="ID">
                         <th id="id">{props.text.id}</th>
                         <th id="rentDate">{props.text.rentDate}</th>
                         <th id="returnDate">{props.text.returnDate}</th>
@@ -186,65 +200,24 @@ function CheckOut(props) {
         compare();
     }
 
-    const logOut = async () => {
-        setUserId("");
-        console.log("Log Out");
-        props.doc.logOut();
-        setState(State.LoggedOut);
-        const passwordInput = document.getElementById("searchPassword");
-        passwordInput.value = "";
-        setPasswordText("");
-    }
-
-    function compare() {
+    const compare = () => {
         if (!userData || state === State.LoggedOut)
             return;
 
-        var matched = false;
-        if (userData.user && passwordText.length > 0) {
-            console.log("User data available");
-            const emailDb = userData.user.encrypted_email;
-            const phoneDb = userData.user.encrypted_phone;
-
-            const passwordTyped = prk.sign(passwordText, 'base64');
-            if (emailDb === passwordTyped)
-            {
-//                console.log("Email match");
-                matched = true;
-            }
-            else
-            {
-                var numberString = "";
-                for (let i = 0 ; i < passwordText.length ; i++)
-                {
-                    if (!isNaN(passwordText[i]))
-                        numberString += passwordText[i];;
-                }
-                const passwordTyped = prk.sign(numberString, 'base64');
-                if (passwordTyped === phoneDb)
-                {
-//                    console.log("Phone match");
-                    matched = true;
-                }
-                else
-                {
-//                    console.log("Nothing matched");
-                }
-            }
-
-//            console.log("toast available");
-        }
         console.log(toast.isActive(loggingId));
         const prop = toastProp;
+
         let text;
-        if (matched)
+        if (props.context.checkLogIn(userData, passwordText))
         {
             props.doc.logIn(userData.user);
 
             setSearchResults(props.doc.getRent(userId));
             setState(State.LoggedIn);
+
             prop.type = toast.TYPE.SUCCESS;
             text = props.text.logInSucceed;
+            document.cookie = "user_id=" + userId + "; expires=" + expireDate + ";";
         }
         else
         {
@@ -269,7 +242,10 @@ function CheckOut(props) {
     return (
         <div id="checkOut">
             <div id="title">
-                <h2>{props.text.checkOutTitle}</h2>
+                <h2>
+                    {props.logged && props.text.checkOutTitle}
+                    {!props.logged && props.text.logIn}
+                </h2>
             </div>
             <div id="checkOutInput" hidden={state === State.LoggedIn}>
                 <input type="text" id="searchInput"
@@ -286,16 +262,15 @@ function CheckOut(props) {
                     onInput={(event) => {
                         setPasswordText(event.target.value);
                     }} />
+                <div id="autoLogin">
+                    <input type="checkbox" id="autoLoginButton" checked={autoLogin} onChange={() => toggleAutoLogin()}/>
+                    <label>
+                            {props.text.autoLogin}
+                    </label>
+                </div>
                <button id="logIn" onClick={async () => logIn()}> {props.text.logIn} </button>
             </div>
             <div id="checkOutResult" hidden={state !== State.LoggedIn}>
-                <div id="checkOutUser">
-                    <div id="name"> {props.doc.userInfo["_id"] + " : " + props.doc.userInfo["name"] + props.text.nameSuffix}
-                    </div>
-                    <div id="logOut">
-                        <button id="logOutButton" onClick={async () => logOut()}> {props.text.logOut} </button>
-                    </div>
-                </div>
                 <div>
                     { showEntries(searchResults) }
                 </div>

@@ -10,6 +10,7 @@ class Doc {
         this.userInfo = {};
         this.book = {};
         this.rent = {};
+        this.logCallback = undefined;
     }
 
     checkState() {
@@ -21,6 +22,10 @@ class Doc {
             }
         }
 
+    }
+
+    setLogCallback(callback) {
+        this.logCallback = callback;
     }
 
     setRent(rent) {
@@ -45,12 +50,16 @@ class Doc {
         console.log("Logged in: " + userInfo['_id']);
         this.logged = true;
         this.userInfo = userInfo;
+        if (this.logCallback)
+            this.logCallback(true);
     }
 
     logOut() {
         console.log("Logged out");
         this.logged = false;
         this.userInfo = {};
+        if (this.logCallback)
+            this.logCallback(false);
     }
 
     getRent(userId) {

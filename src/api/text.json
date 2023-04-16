@@ -34,6 +34,8 @@
 		"rentDate" : "Rent date",
 		"returnDate" : "Return date",
 		"noEntry" : "No entry",
+		"notice" : "Notice",
+		"autoLogin" : "AutoLogin",
 		"homeText": "<div class=\"container\"><h2>Library Hours:</h2> <ul> <li>Every Sunday 9:30am~12:00pm</li> </ul> <h2>Book Borrowing:</h2> <ul> <li>Every Sunday 10:30am~12:00pm</li> <li>Maximum number of books for borrowing: 5</li> <li>Borrowing period: 3 weeks (Please request an extension from a volunteer at the time of borrowing or send an extension request email to <a href='mailto:hkmcc.library@gmail.com'>hkmcc.library@gmail.com</a>)</li> <li>Book return: Please return the books to the return box in front of the library or directly to the library volunteers.</li> <li>Request for desired books: Please fill out and submit the desired book request form provided at the library.</li> </ul> <h2>For other inquiries:</h2> <ul> <li>Please contact the library by email at <a href='mailto:hkmcc.library@gmail.com'>hkmcc.library@gmail.com</a>.</li> </ul></div>"
 	},
 	"kr": {
@@ -71,6 +73,8 @@
 		"rentDate" : "대출일",
 		"returnDate" : "반납일",
 		"noEntry" : "내역 없음",
+		"notice" : "공지 사항",
+		"autoLogin" : "자동 로그인",
 		"homeText": "<div class=\"container\"><h2>도서관 개방시간:</h2><ul><li>매 주일(일) 9:30am~12:00pm</li></ul><h2>도서 대출:</h2><ul><li>매 주일 10:30am~12:00pm </li><li>대출 권수: 최대 5권</li><li>대출 기간: 3주 (도서 대출시간에 봉사자에게 연장을 요청하시거나, <a href='mailto:hkmcc.library@gmail.com'>hkmcc.library@gmail.com</a>으로 연장 신청 메일을 보내시기 바랍니다.)</li><li>도서 반납: 도서관 앞 반납함에 넣어 주시거나 도서관 봉사자에게 직접 반납하여 주십시오.</li><li>희망 도서 신청: 도서관에 비치된 희망 도서 신청서에 작성하여 제출하여 주세요.</li></ul></p><h2>문의:</h2><ul><li>도서관 관련 문의는 도서관 이메일 주소 <a href='mailto:hkmcc.library@gmail.com'>hkmcc.library@gmail.com</a>로 문의 바랍니다.</li></ul></div>"
 	}
 }

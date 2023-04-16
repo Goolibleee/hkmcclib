@@ -19,17 +19,55 @@ function DropDown(props) {
         }, [props.dropdown, dropdown, click]
     );
 
+    const logOut = () =>
+    {
+        setClick(false);
+        props.doc.logOut();
+        document.cookie = "user_id=";
+        document.cookie = "password=";
+        document.cookie = "autoLogin=false";
+    }
+
     return (
             <div onClick={() => { setClick(!click)}} className={click ? 'dropdown-menu' : 'drop-menu'}>
-                <Link className='menu-items' to="/" onClick={() => setClick(false)}>
-                    {props.text.home}
-                </Link>
-                <Link className='menu-items' to="/search" onClick={() => setClick(false)}>
-                    {props.text.searchTitle}
-                </Link>
-                <Link className='menu-items' to="/checkOut" onClick={() => setClick(false)}>
-                    {props.text.checkOutTitle}
-                </Link>
+                {props.logged &&
+                    <>
+                        <div className='menu-items'>
+                            {props.doc.userInfo["_id"] + " : " + props.doc.userInfo["name"] + props.text.nameSuffix}
+                        </div>
+                        <Link className='menu-items' to="/" onClick={() => setClick(false)}>
+                            {props.text.home}
+                        </Link>
+                        <Link className='menu-items' to="/notice" onClick={() => setClick(false)}>
+                            {props.text.notice}
+                        </Link>
+                        <Link className='menu-items' to="/search" onClick={() => setClick(false)}>
+                            {props.text.searchTitle}
+                        </Link>
+                        <Link className='menu-items' to="/checkOut" onClick={() => setClick(false)}>
+                            {props.text.checkOutTitle}
+                        </Link>
+                        <div className='menu-items' onClick={() => logOut()}>
+                            {props.text.logOut}
+                        </div>
+                    </>
+                }
+                {!props.logged &&
+                    <>
+                        <Link className='menu-items' to="/" onClick={() => setClick(false)}>
+                            {props.text.home}
+                        </Link>
+                        <Link className='menu-items' to="/notice" onClick={() => setClick(false)}>
+                            {props.text.notice}
+                        </Link>
+                        <Link className='menu-items' to="/checkOut" onClick={() => setClick(false)}>
+                            {props.text.logIn}
+                        </Link>
+                        <Link className='menu-items' to="/search" onClick={() => setClick(false)}>
+                            {props.text.searchTitle}
+                        </Link>
+                    </>
+                }
             </div>
     )
 }
