@@ -1,51 +1,40 @@
 import React, { useEffect, useState } from "react";
+import Reader from "./Reader";
 import "./Page.css"
 import { toast } from "react-toastify";
-import { toastProp, loggingId } from "../Util";
+import { toastProp, loggingId, loadingId, getBookState, getUserState } from "../Util";
+import { useDebounce } from "use-debounce";
 import { useLazyQuery } from "@apollo/client";
 import { Link } from 'react-router-dom'
 import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
+import axios from "axios";
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
 const State = {
     LoggedOut: 0,
     LoggingIn: 1,
-    LoggedIn:  2
+    LoggedIn:  2,
+    LoggingOut: 3
 }
 
 function CheckOut(props) {
     const [userText, setUserText] = useState("");
-    const [passwordText, setPasswordText] = useState("");
     const [searchResults, setSearchResults] = useState([]);
+    const [bookText, setBookText] = useState("");
+    const [searchQuery] = useDebounce(bookText, 50);
     const [initialized, setInitialized] = useState(false);
     const [userId, setUserId] = useState("");
     const [state, setState] = useState(State.LoggedOut);
-    const [history, setHistory] = useState([]);
-    const [autoLogin, setAutoLogin] = useState(false);
-    const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY,
-                     { "variables": { "_id": userId } });
-    const [loadHistory, { data: historyData }] = useLazyQuery(HISTORY_QUERY,
-                     { "variables": { "user_id": userId } });
-    const [expireDate, setExpireDate] = useState("");
+    const [userData, setUserData] = useState({});
+    const [scannedBook, setScannedBook] = useState({});
+    const [needConfirm, setNeedConfirm] = useState(false);
+    const [notifyRequest, setNotifyRequest] = useState({});
 
     useEffect(function () {
         async function initialize() {
-            if (props.doc.isOpen())
-                updateDoc(false);
-            else
-                props.doc.setCallback(updateDoc);
+            updateDoc();
             console.log("=======================================");
             console.log("CheckOut initialize");
-
-
-            if ("autoLogin" in props.context.cookie)
-            {
-                const autoLogin = (props.context.cookie.autoLogin === "true") ? true : false;
-                setAutoLogin(autoLogin);
-            }
-            const date = new Date();
-            const days=2;
-            date.setTime(date.getTime()+(days*24*60*60*1000));
-            setExpireDate(date.toGMTString());
         }
 
         initialize();
@@ -55,7 +44,7 @@ function CheckOut(props) {
     useEffect(
         () => {
             console.log("User data updated ");
-            updateDoc(false);
+            updateDoc();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [props.logged]
@@ -64,7 +53,37 @@ function CheckOut(props) {
     useEffect(
         () => {
             console.log("User data updated ");
-            compare();
+            console.log(toast.isActive(loggingId));
+            const prop = toastProp;
+
+            let text;
+            let notify = false;
+            if ("USER_CODE" in userData && state !== State.LoggedIn)
+            {
+                setState(State.LoggedIn);
+
+                prop.type = toast.TYPE.SUCCESS;
+                text = props.text.logInSucceed;
+                notify = true;
+            }
+            else if (!("USER_CODE" in userData))
+            {
+                setState(State.LoggedOut);
+
+                if (state === State.LoggingIn)
+                {
+                    prop.type = toast.TYPE.ERROR;
+                    text = props.text.logInFail;
+                    notify = true;
+                }
+            }
+
+            if (notify)
+            {
+                setNotifyRequest({"id": loadingId,
+                                  "text": text,
+                                  "type": prop.type})
+            }
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [userData]
@@ -72,82 +91,65 @@ function CheckOut(props) {
 
     useEffect(
         () => {
-            let rawHist = [];
-            if (!historyData || !props.doc.bookReady || !props.doc.rentReady)
-                return;
-            console.log("History updated ");
-//            console.log(historyData);
-            for (let i = 0 ; i < historyData["rentLogs"].length ; i++)
+            console.log("book updated ");
+            if ("BARCODE" in scannedBook)
             {
-                const entry = historyData["rentLogs"][i];
-                if (entry["book_state"] !== "0" && entry["book_state"] !== "1")
-                    continue;
-                const id = entry["book_id"];
-                const date = entry["timestamp"].split(" ")[0].replace("-", "/", 2).replace("-", "/")
-                rawHist.push({"id": id, "title": props.doc.book[id]["title"], "date": date, "state": entry["book_state"]});
-            }
-            rawHist.sort((s1, s2) => { return s1["date"] > s2["date"]; });
-//            console.log(rawHist);
-
-            let hist = [];
-            for (let i = 0 ; i < rawHist.length - 1 ; i++)
-            {
-                if (rawHist[i]["state"] !== "1")
-                    continue;
-                const entry  = rawHist[i];
-                const id = entry["id"];
-                for (let j = i+1 ; j < rawHist.length ; j++)
+                if (scannedBook._STATE == 0)
                 {
-                    if (rawHist[j]["state"] !== "0" || id !== rawHist[j]["id"])
-                        continue;
-                    hist.push({"id": entry["id"], "title": entry["title"], "rentDate": entry["date"], "retDate": rawHist[j]["date"]});
-                    break;
+                    setNeedConfirm(true);
+                }
+                else
+                {
+                    setNotifyRequest({"id": loadingId,
+                                      "text": props.text.RENTED,
+                                      "type": toast.TYPE.ERROR})
+                    document.getElementById('barcodeScan').value= null;
+                    setNeedConfirm(false);
                 }
             }
-//            console.log(hist);
-            console.log("Set history");
-            setHistory(hist);
+            else
+            {
+                setNeedConfirm(false);
+            }
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [historyData, props.doc.bookReady, props.doc.rentReady]
+        [scannedBook]
     );
 
-    async function updateDoc(notify = true)
-    {
-        console.log("All data loaded " + initialized);
-        if (props.doc.logged)
-        {
-            setState(State.LoggedIn);
-            const userId = props.doc.userInfo['_id'];
-            setUserId(userId);
-            setSearchResults(props.doc.getRent(userId));
-            await loadHistory();
-        }
-        else
-        {
-            setState(State.LoggedOut);
-            setUserId("");
-            setPasswordText("");
-        }
+    useEffect(
+        () => {
+            if (! "text" in notifyRequest)
+                return
 
-        if (notify)
-        {
             const prop = toastProp;
-            prop.type = toast.TYPE.SUCCESS;
-            prop.render = props.text.succeededToOpen;
+            const text = notifyRequest.text
+            prop.type = notifyRequest.type
             prop.autoClose = 3000;
-            prop.toastId = "";
-            toast.info(props.text.succeededToOpen, prop);
-        }
-        console.log("Done");
+            let id = 0
+            if ("id" in notifyRequest)
+                id = notifyRequest.id
+
+            prop.toastId = id
+            if (toast.isActive(id))
+                toast.update(id, notifyRequest.text, prop);
+            else
+                toast.info(notifyRequest.text, prop);
+//            setNotifyRequest({})
+        },
+        [notifyRequest]
+    );
+
+    async function updateDoc()
+    {
         setInitialized(true);
     }
 
-    const showRented = (rent, index) => {
-        const id = rent["id"];
-        const rentDate = rent["rentDate"];
-        const retDate = rent["retDate"];
-        const bookName = rent["title"];
+    const showBook = (book, index) => {
+        const id = book["BARCODE"];
+        const state = getBookState(props.text, book["_STATE"].toString());
+        const rentDate = book["_RENT"];
+        const retDate = book["_RETURN"];
+        const bookName = book["BOOKNAME"];
         const key = index.toString();
         return (<React.Fragment key={key + "Fragment"}>
                     <tr key={key} className="bookData">
@@ -156,19 +158,11 @@ function CheckOut(props) {
                         <td className="bookData">{retDate}</td>
                     </tr>
                     <tr key={key + "Title"} className="bookName">
-                        <td colSpan="3" className="bookName">{bookName}</td>
+                        <td className="bookState">{state}</td>
+                        <td colSpan="2" className="bookName">{bookName}</td>
                     </tr>
                 </React.Fragment>
                 );
-    }
-
-
-    const toggleAutoLogin = () => {
-        console.log("Toggle autoLogin");
-        const cookieString = "autoLogin=" + (autoLogin ? "false":"true") + "; expires=" + expireDate + ";";
-        console.log(cookieString);
-        document.cookie = cookieString;
-        setAutoLogin(!autoLogin);
     }
 
     const showEntries = (result) => {
@@ -180,9 +174,10 @@ function CheckOut(props) {
                         <th id="returnDate">{props.text.returnDate}</th>
                     </tr>
                     {
-                        result.map((rent, index) => {
-                            return showRented(rent, index);
-                        })
+//                        result.map((rent, index) => {
+//                            return showBook(rent, index);
+//                        })
+                         "BARCODE" in result && showBook(result, result.BARCODE)
                     }
                     {
                         result.length === 0 && <tr key="None"><td colSpan="3">{props.text.noEntry}</td></tr>
@@ -191,60 +186,179 @@ function CheckOut(props) {
                 </div>);
     }
 
-    const logIn = async () => {
-        setState(State.LoggingIn);
-        setUserId(userText.toUpperCase());
-        await loadUser();
-        await loadHistory();
-        console.log("Log In");
-        compare();
+    const updateUser = async (userText) => {
+        const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/user?user=" + userText;
+        const obj = {"params": {"user": userText, "data":"nothing"}};
+        console.log(obj);
+        const response = await axios.get(url, btoa(JSON.stringify(obj)));
+        const user = response.data.return;
+        setUserData(user);
+        console.log(user);
     }
 
-    const compare = () => {
-        if (!userData || state === State.LoggedOut)
+    const logIn = async () => {
+        console.log("LOGIN");
+        console.log(userText);
+        if (userText.length == 0)
             return;
+        setState(State.LoggingIn);
+        const id = userText.toUpperCase();
+        setUserId(id);
+        updateUser(id);
+    }
 
-        console.log(toast.isActive(loggingId));
-        const prop = toastProp;
+    const logOut = async () => {
+        console.log("Log Out");
+        setUserData({});
+        setScannedBook({});
+        setUserText("");
+        document.getElementById('barcodeScan').value= null;
+    }
 
-        let text;
-        if (props.context.checkLogIn(userData, passwordText))
-        {
-            props.doc.logIn(userData.user);
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
 
-            setSearchResults(props.doc.getRent(userId));
-            setState(State.LoggedIn);
+    function imageCaptured(e)
+    {
+        console.log("Image Captured");
+        if (e.target.files && e.target.files.length > 0)
+        {
+            const file = e.target.files[0];
+            console.log(file)
+            console.log(file.type);
+//            setResult(file.type + " " + file.size.toString());
+            const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/uploadImage"
+            console.log(url)
+            getBase64(file).then(
+                img => {
+                    axios({
+                        method: "post",
+                        mode: 'no-cors',
+                        crossDomain: 'true',
+                        url: url,
+                        headers: {
+                            "Access-Control-Allow-Origin": "*",
+                            "Content-Type": "application/json",
+                            "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS"
+                        },
+                        withCredentials: false,
+                        credentials: 'same-origin',
+                        data: {
+                            image: img
+                        }
+                    }).then( response => {
+                        const book = response.data.return
+                        console.log(response);
+                        console.log(book);
+                        if ('BOOKNAME' in book)
+                        {
+                            setScannedBook(book)
+                        }
+                        else
+                        {
+                            setNotifyRequest({"id": loadingId,
+                                              "text": props.text.INVALID_BOOK,
+                                              "type": toast.TYPE.ERROR})
+                        }
+                    });
+                }
+            );
+        }
+    }
 
-            prop.type = toast.TYPE.SUCCESS;
-            text = props.text.logInSucceed;
-            document.cookie = "user_id=" + userId + "; expires=" + expireDate + ";";
-        }
-        else
-        {
-            prop.type = toast.TYPE.ERROR;
-            text = props.text.logInFail;
-        }
-        prop.render = text;
-        prop.autoClose = 3000;
-        prop.toastId = loggingId;
-        if (toast.isActive(loggingId))
-        {
-            console.log("update toast");
-            toast.update(loggingId, prop);
-        }
-        else
-        {
-            console.log("New toast");
-            toast.info(text, prop);
-        }
+    useEffect(
+        () => {
+            if (bookText.length > 0)
+            {
+                const bookId = "HK" + bookText;
+                console.log("Search book " + bookId);
+                const url = "https://" + props.doc.serverInfo.localIp + ":" +
+                    props.doc.serverInfo.port + "/book";
+//                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
+                const obj = {"params": {"book": bookId, "match": true}};
+                console.log(obj);
+                axios.get(url, obj).then( response => {
+                        const book = response.data.return;
+                        console.log(book)
+                        if ('BOOKNAME' in book)
+                        {
+                            setScannedBook(book)
+                        }
+                    }
+                );
+            }
+        },
+        [searchQuery]
+    );
+
+    function confirmAction()
+    {
+        console.log("Confirmed");
+        setNeedConfirm(false);
+        console.log(scannedBook);
+        document.getElementById('barcodeScan').value= null;
+        const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/checkOut"
+        axios({
+            method: "post",
+            mode: 'no-cors',
+            crossDomain: 'true',
+            url: url,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS"
+            },
+            withCredentials: false,
+            credentials: 'same-origin',
+            data: {
+                book: scannedBook.BARCODE,
+                user: userId
+            }
+        }).then( response => {
+            const ret = response.data.return
+            console.log("Rent confirmed");
+            console.log(ret)
+
+            if (ret === "SUCCESS")
+            {
+                setNotifyRequest({"id": loadingId,
+                                  "text": props.text.rentSucceed,
+                                  "type": toast.TYPE.SUCCESS})
+            }
+            else
+            {
+                let text
+                if (ret in props.text)
+                    text = props.text[ret];
+                else
+                    text = props.text.NOT_AVAILABLE;
+                console.log(text)
+                setNotifyRequest({"id": loadingId,
+                                  "text": text,
+                                  "type": toast.TYPE.ERROR})
+            }
+            updateUser(userId);
+        });
+    }
+
+    function cancelAction()
+    {
+        console.log("Cancelled")
+        setNeedConfirm(false);
+        document.getElementById('barcodeScan').value= null;
     }
 
     return (
         <div id="checkOut">
             <div id="title">
                 <h2>
-                    {props.logged && props.text.checkOutTitle}
-                    {!props.logged && props.text.logIn}
+                    {props.text.checkOut}
                 </h2>
             </div>
             <div id="checkOutInput" hidden={state === State.LoggedIn}>
@@ -255,29 +369,44 @@ function CheckOut(props) {
                     onInput={(event) => {
                         setUserText(event.target.value);
                     }} />
-                <input type="password" id="searchPassword"
-                    placeholder={props.text.pwHolder}
-                    value={passwordText}
-                    disabled={!initialized}
-                    onInput={(event) => {
-                        setPasswordText(event.target.value);
-                    }} />
-                <div id="autoLogin">
-                    <input type="checkbox" id="autoLoginButton" checked={autoLogin} onChange={() => toggleAutoLogin()}/>
-                    <label>
-                            {props.text.autoLogin}
-                    </label>
-                </div>
                <button id="logIn" onClick={async () => logIn()}> {props.text.logIn} </button>
             </div>
             <div id="checkOutResult" hidden={state !== State.LoggedIn}>
-                <div>
-                    { showEntries(searchResults) }
+                {userData.USER_CODE && (
+                    <div id="userInfo">
+                        <div id="userItem">
+                            {userData.USER_CODE + " : " + userData.USER_NAME + props.text.nameSuffix}
+                        </div>
+                        <div id="userItem"> {getUserState(props.text, userData.USER_STATE)} </div>
+                        <div id="userItem"> {userData._RENT.length + " " + props.text.rentSuffix} </div>
+                    </div>
+                )}
+                <div id="bookInput" hidden={needConfirm}>
+                    <label id="barcodeScan">
+                        <CameraAltIcon fontSize="large" sx={{color: "#404040"}} />
+                        <span>
+                        <input type="file" id="barcodeScanInput" accept="image/*" capture="environment" onChange={(e) => imageCaptured(e)} />
+                        </span>
+                    </label>
+                    <label id="manualInput">
+                        <div id="hkPrefix">
+                        HK
+                        </div>
+                        <input inputMode="numeric" pattern="[0-9]*" type="text" id="searchInput"
+                            placeholder={props.text.bookHolder}
+                            onInput={(event) => {
+                                setBookText(event.target.value);
+                            }} />
+                    </label>
                 </div>
-
-                <div id="name">{props.text.history}</div>
+                {needConfirm && (<div id="checkRent">
+                    <div id="bookName"> {props.text.confirmRent} </div>
+                    <div id="bookName"> {scannedBook.AUTHOR + ": " + scannedBook.BOOKNAME} </div>
+                    <button id="confirm" onClick={() => confirmAction()}> Confirm </button>
+                    <button id="cancel" onClick={() => cancelAction()}> Cancel </button>
+                </div>)}
                 <div>
-                    { showEntries(history) }
+                    <button id="logOutButton" onClick={() => logOut()}> {props.text.logOut} </button>
                 </div>
             </div>
         </div>

@@ -3,10 +3,11 @@ import "./Page.css"
 import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
 import { toastProp } from "../Util";
-import { SEARCH_PER_SCREEN, MAX_SEARCH_ENTRY } from "../Util";
+import { SEARCH_PER_SCREEN, MAX_SEARCH_ENTRY, getBookState, toUtf8 } from "../Util";
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { useParams } from "react-router-dom";
+import axios from "axios";
 
 let initialized = false;
 
@@ -26,7 +27,7 @@ function Search(props) {
     useEffect(function () {
         async function initialize() {
             if (props.doc.isOpen())
-                updateDoc(false);
+                updateDoc();
             else
                 props.doc.setCallback(updateDoc);
             console.log("BOOK ID: " + id);
@@ -54,50 +55,88 @@ function Search(props) {
             async function findBooks(text) {
                 let results = [];
 
-                for (let i = 0 ; i < bookList.length ; i++) {
-                    const row = bookList[i];
-                    if (results.length >= MAX_SEARCH_ENTRY) break;
-                    if ((row.name && row.name.toString().includes(text)) ||
-                        (row.code === text))
+                if (props.doc.serverAvailable)
+                {
+                    console.log(toUtf8(text));
+                    console.log(btoa(toUtf8(text)));
+                    const url = "https://" + props.doc.serverInfo.localIp + ":" +
+                        props.doc.serverInfo.port + "/book";
+                    const obj = {"params": {"book": btoa(toUtf8(text)), "metch":false}};
+                    console.log(obj);
+                    const response = await axios.get(url, obj);
+                    console.log(response)
+                    const books = response.data.return;
+                    let retDate = "";
+                    for (let i = 0 ; i < books.length ; i++)
                     {
-                        let resultString = `${row.name} ${row.claim_num}`;
-                        let rent = props.text.available;
-                        let retDate = "";
-                        for (const entry of rentList)
+                        const entry = {};
+                        const book = books[i];
+                        const resultString = `${book.BOOKNAME} ${book.CLAIMNUM}`;
+                        const state = book._STATE;
+                        if (state === 1 || state === 3)
                         {
-                            if (entry.code === row.code)
-                            {
-                                if (entry.state === "1")
-                                {
-                                    rent = props.text.checkedOut;
-                                    retDate = props.text.returnDate + " " + entry.retDate;
-                                }
-                                else if (entry.state === "3")
-                                {
-                                    rent = props.text.overDue;
-                                    retDate = props.text.returnDate + " " + entry.retDate;
-                                }
-                                else
-                                {
-                                    rent = props.text.notAvailable;
-                                }
-
-                                break;
-                            }
+                            retDate = props.text.returnDate + " " + book._RETURN;
                         }
-//                        if (rentList.includes(row.code))
-//                            rent = props.text.checkedOut;
-//                        else
-//                            rent = props.text.available;
                         let resultObject = {
                             index: i,
                             text: resultString,
-                            name: row.name,
-                            code: row.code.toString(),
-                            rent: rent,
-                            retDate: retDate
+                            name: book.BOOKNAME,
+                            code: book.BARCODE,
+                            rent: getBookState(props.text, book._STATE.toString()),
+                            retDate: retDate,
+                            author: book.AUTHOR,
+                            totalName: book.TOTAL_NAME,
+                            claim_num: book.CLAMENUM,
+                            publish: book.PUBLISH,
+                            claim: book.CLAIM
                         };
                         results.push(resultObject);
+                    }
+                }
+                else
+                {
+
+                    for (let i = 0 ; i < bookList.length ; i++) {
+                        const row = bookList[i];
+                        if (results.length >= MAX_SEARCH_ENTRY) break;
+                        if ((row.name && row.name.toString().includes(text)) ||
+                            (row.code === text))
+                        {
+                            let resultString = `${row.name} ${row.claim_num}`;
+                            let rent = props.text.available;
+                            let retDate = "";
+                            let state = "0";
+                            for (const entry of rentList)
+                            {
+                                if (entry.code === row.code)
+                                {
+                                    state = entry.state;
+                                    if (state === "1" || state === "3")
+                                    {
+                                        retDate = props.text.returnDate + " " + entry.retDate;
+                                    }
+                                    break;
+                                }
+                            }
+    //                        if (rentList.includes(row.code))
+    //                            rent = props.text.checkedOut;
+    //                        else
+    //                            rent = props.text.available;
+                            let resultObject = {
+                                index: i,
+                                text: resultString,
+                                name: row.name,
+                                code: row.code.toString(),
+                                rent: getBookState(props.text, state),
+                                retDate: retDate,
+                                author: row.author,
+                                totalName: row.totalName,
+                                claim_num: row.claim_num,
+                                publish: row.publish,
+                                claim: row.claim
+                            };
+                            results.push(resultObject);
+                        }
                     }
                 }
                 results.sort(function(a,b) { return a['text'] > b['text']; });
@@ -140,20 +179,11 @@ function Search(props) {
         }, [searchResults, pageNum]
     );
 
-    async function updateDoc(notify = true)
+    async function updateDoc()
     {
         console.log("All data loaded " + initialized);
         initialized = true;
 
-        if (notify) {
-            const prop = toastProp;
-            prop.type = toast.TYPE.SUCCESS;
-            prop.render = props.text.succeededToOpen;
-            prop.autoClose = 3000;
-            prop.toastId = "";
-            toast.info(props.text.loading, prop);
-        }
-        console.log("Done");
         let rl = [];
         const rented = props.doc.rent;
         for (let i = 0 ; i < rented.length; i++)
@@ -204,7 +234,6 @@ function Search(props) {
 
     const showEntry = (result) => {
         const hidden = (result.index !== selectedId);
-        const bookInfo = bookList[result.index];
         const entryId = (hidden) ? "searchResult" : "selectedSearchResult";
         return (
             <div key={result.code}>
@@ -220,15 +249,15 @@ function Search(props) {
             <div>
                 <table><tbody>
                 <tr>
-                    <td>{bookInfo.author} </td>
-                    <td colSpan="2" rowSpan="2">{bookInfo.totalName} <b>{bookInfo.name}</b> { bookInfo.claim_num} </td>
+                    <td>{result.author} </td>
+                    <td colSpan="2" rowSpan="2">{result.totalName} <b>{result.name}</b> { result.claim_num} </td>
                 </tr>
                 <tr>
-                    <td>{bookInfo.code} </td>
+                    <td>{result.code} </td>
                 </tr>
                 <tr>
-                    <td>{bookInfo.publish}</td>
-                    <td colSpan={result.retDate.length > 0 ? "1":"2"}>{bookInfo.claim} </td>
+                    <td>{result.publish}</td>
+                    <td colSpan={result.retDate.length > 0 ? "1":"2"}>{result.claim} </td>
                     {result.retDate.length > 0 && <td>{result.retDate}</td> }
                 </tr>
                 </tbody></table>
@@ -241,7 +270,7 @@ function Search(props) {
     return (
         <div id="search">
             <div id="title">
-                <h2> {props.text.searchTitle} </h2>
+                <h2> {props.text.bookSearch} </h2>
             </div>
             <div id="searchContents">
                 <input id="searchInput"

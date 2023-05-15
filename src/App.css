@@ -12,6 +12,7 @@ h1 {
 h2 {
     text-align: left;
     margin: 0;
+    margin-left: 0;
     color: black;
     font-size: 1.5rem;
     margin-top: 1rem;
@@ -43,6 +44,7 @@ body {
     font-size: 16px;
     line-height: 1.5;
     position: relative;
+    overflow-x: hidden;
 }
 body::before {
     content: "";
@@ -123,5 +125,8 @@ a:link a:visited a:hover a:active {
     }
     #nav_print {
         display: none;
+    }
+    h2 {
+        margin-left: 20px;
     }
 }

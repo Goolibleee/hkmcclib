@@ -30,11 +30,23 @@ export const RENT_QUERY = gql`
     }
 `;
 
+export const USERS_QUERY = gql`
+    query AllUser {
+        users (limit: 20000) {
+            _id
+            name
+            state
+            level
+        }
+    }`;
+
 export const USER_QUERY = gql`
     query FindUser($_id: String!){
         user (query: {_id:$_id}) {
             _id
             name
+            state
+            level
             encrypted_email
             encrypted_phone
         }
@@ -67,5 +79,15 @@ export const CONTENT_QUERY = gql`
             date
             title
             content
+        }
+    }`;
+
+export const SERVER_QUERY = gql`
+    query GetServerInfo {
+        serverInfo {
+            _id
+            globalIp
+            localIp
+            port
         }
     }`;

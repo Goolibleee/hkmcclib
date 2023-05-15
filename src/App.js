@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
+
 import Home from "./pages/Home";
 import Notice from "./pages/Notice";
 import Search from "./pages/Search";
+import CheckOutStatus from "./pages/CheckOutStatus";
 import CheckOut from "./pages/CheckOut";
+import Return from "./pages/Return";
+import UserSearch from "./pages/UserSearch";
+import Reader from "./pages/Reader";
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Zoom } from "react-toastify";
@@ -15,7 +21,7 @@ import { toast } from "react-toastify";
 import { toastProp, loadingId } from "./Util";
 import { useQuery, useLazyQuery } from "@apollo/client";
 import Navbar from "./Navbar";
-import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query.js";
+import {BOOK_QUERY, RENT_QUERY, USER_QUERY, SERVER_QUERY} from "./api/query.js";
 
 const doc = new Doc();
 const context = new Context();
@@ -28,7 +34,8 @@ function App() {
     const [logged, setLogged] = useState(false);
     const [userId, setUserId] = useState("");
     const { loading: rentLoading, error: rentError, data: rentData } = useQuery(RENT_QUERY);
-    const { loading: bookLoading, error: bookError, data: bookData } = useQuery(BOOK_QUERY);
+    const { loading: serverLoading, error: serverError, data: serverData } = useQuery(SERVER_QUERY);
+    const [loadBook, { loading: bookLoading, error: bookError, data: bookData }] = useLazyQuery(BOOK_QUERY);
     const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY, { "variables": { "_id": userId } });
 
     useEffect(function () {
@@ -53,20 +60,15 @@ function App() {
                 textString[key] = ts[key];
             }
 
+            await doc.updateIpAddr();
+
             if ("autoLogin" in context.cookie &&  context.cookie.autoLogin === "true")
             {
                 console.log("Auto Login: " + context.cookie.user_id);
                 setUserId(context.cookie.user_id);
                 console.log(context.cookie.nothing);
+                loadUser();
             }
-            const prop = toastProp;
-            prop.type = toast.TYPE.LOADING;
-            prop.autoClose = false;
-            prop.toastId = loadingId;
-            toast.loading(textString.loading, prop);
-            doc.setLogCallback(updateLog);
-
-            loadUser();
 
         }
         initialize();
@@ -104,6 +106,8 @@ function App() {
                 logMsg = logMsg + "<p>Rent available</p>"
 //                console.log(rentData.rents)
                 doc.setRent(rentData.rents)
+                if (doc.initialized)
+                    notifyInit()
             }
         }, [rentLoading, rentError, rentData]
     );
@@ -120,12 +124,52 @@ function App() {
                 logMsg = logMsg + "<p>Book available</p>";
 //                console.log(bookData.books)
                 doc.setBook(bookData.books)
+                if (doc.initialized)
+                    notifyInit()
             }
         }, [bookLoading, bookError, bookData]
     );
 
+    useEffect(
+        () => {
+            console.log("Server Query Updated");
+            logMsg = logMsg + "<p>Server Query Updated</p>";
+            console.log(serverLoading)
+            console.log(serverError)
+            if (serverData)
+            {
+                console.log("Server info available")
+                logMsg = logMsg + "<p>Server info available</p>";
+                console.log(serverData.serverInfo)
+                doc.setServerInfo(serverData.serverInfo)
+
+                if (!doc.serverAvailable)
+                {
+                    console.log("Server in not available. Load books from cloud DB");
+                    loadBook();
+                    const prop = toastProp;
+                    prop.type = toast.TYPE.LOADING;
+                    prop.autoClose = false;
+                    prop.toastId = loadingId;
+                    toast.loading(textString.loading, prop);
+                    doc.setLogCallback(updateLog);
+                }
+            }
+        }, [serverLoading, serverError, serverData]
+    );
+
+    function notifyInit()
+    {
+        const prop = toastProp;
+        prop.type = toast.TYPE.SUCCESS;
+        prop.render = textString.succeededToOpen;
+        prop.autoClose = 3000;
+        prop.toastId = "";
+        toast.info(textString.succeededToOpen, prop);
+    }
+
     function updateLog(logged) {
-        console.log("==== Update logging state");
+        console.log("==== Update logging state " + doc.logged);
         console.log(doc.userInfo);
         setLogged(doc.logged);
     }
@@ -138,7 +182,10 @@ function App() {
                 <Route path="/" element={<Home doc={doc} text={textString}/>} />
                 <Route path="/notice" element={<Notice doc={doc} text={textString} />} />
                 <Route path="/search/:id?" element={<Search doc={doc} text={textString}/>} />
+                <Route path="/checkOutStatus" element={<CheckOutStatus context={context} doc={doc} text={textString} logged={logged}/>} />
+                <Route path="/userSearch" element={<UserSearch context={context} doc={doc} text={textString} />} />
                 <Route path="/checkOut" element={<CheckOut context={context} doc={doc} text={textString} logged={logged}/>} />
+                <Route path="/return" element={<Return context={context} doc={doc} text={textString} logged={logged}/>} />
             </Routes>
 
             <div>

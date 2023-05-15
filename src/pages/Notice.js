@@ -20,10 +20,7 @@ function Notice(props) {
     useEffect(function () {
         async function initialize() {
             console.log("Notice");
-            if (props.doc.isOpen())
-                updateDoc(false);
-            else
-                props.doc.setCallback(updateDoc);
+            props.doc.setCallback(undefined);
         }
         initialize();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,21 +51,6 @@ function Notice(props) {
             }
         }, [selectedData, selectedError, selectedLoading]
     );
-
-    async function updateDoc(notify = true)
-    {
-        console.log("All data loaded ");
-
-        if (notify) {
-            const prop = toastProp;
-            prop.type = toast.TYPE.SUCCESS;
-            prop.render = props.text.succeededToOpen;
-            prop.autoClose = 3000;
-            prop.toastId = "";
-            toast.info(props.text.succeededToOpen, prop);
-        }
-        console.log("Done");
-    }
 
     useEffect(
         () => {
@@ -140,7 +122,7 @@ function Notice(props) {
                     </h2>
                 </div>
                 {selectedId > 0 && selectedData &&
-                <div>
+                <div id="noticeContent">
                     <table className="content"><tbody>
                            {showEntry(selectedData.notice)}
                         <tr>
@@ -151,7 +133,7 @@ function Notice(props) {
                     </tbody></table>
                 </div>
                 }
-                <div id="list">
+                <div id="noticeList">
                     <table><tbody>
                        {displayedCodes.length > 0 && displayedCodes.map((result) => showEntry(result))}
                     </tbody></table>

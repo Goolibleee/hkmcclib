@@ -30,5 +30,41 @@ export const toastProp = {
     progress: undefined
 }
 
+export const getUserState = function(text, state) {
+    if (state == "0")
+        return text.normal;
+    else if (state == "1")
+        return text.overDue;
+    else if (state == "2")
+        return text.stopped;
+}
+
+export const getBookState = function(text, state) {
+    if (state === "0")
+    {
+        return text.available;
+    }
+    else if (state === "1")
+    {
+        return text.checkedOut;
+    }
+    else if (state === "3")
+    {
+        return text.overDue;
+    }
+    else
+    {
+        return text.notAvailable;
+    }
+}
+
+export const toUtf8 = function(text) {
+    return unescape(encodeURIComponent(text));
+};
+
+export const fromUtf8 = function(text) {
+    return decodeURIComponent(escape(text));
+};
+
 export const loadingId = "custom-loading-id";
 export const loggingId = "custom-logging-id";

@@ -1,4 +1,5 @@
 import { toast } from "react-toastify";
+import axios from "axios";
 
 class Doc {
     constructor() {
@@ -6,18 +7,53 @@ class Doc {
         this.initialized = false;
         this.bookReady = false;
         this.rentReady = false;
+        this.userReady = false;
         this.logged = false;
         this.userInfo = {};
         this.book = {};
         this.rent = {};
         this.logCallback = undefined;
+        this.admin = false;
+        this.adminMode = false;
+        this.serverInfo = {};
+        this.serverAvailable = false;
+        this.ipAddr = ""
     }
+
+    async updateIpAddr()
+    {
+        const response = await axios.get("https://api.ipify.org/?format=json");
+        console.log("Get IP Address");
+        console.log(response.data);
+        const ipAddr = response.data.ip;
+        console.log("IP addr updated " + ipAddr)
+        this.ipAddr = ipAddr;
+        this.checkServerIp()
+    }
+
+    checkServerIp()
+    {
+        if (this.ipAddr.length == 0 || !this.serverInfo.globalIp)
+            return
+        if (this.serverInfo.globalIp === this.ipAddr)
+        {
+            console.log("Server is accessible " + this.serverInfo.localIp);
+            this.serverAvailable = true;
+            const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
+//            window.open(query);
+            axios.get(query).then( (response) => {
+                                console.log("Server connected");
+                                console.log(response.data);
+                          });
+        }
+    }
+
 
     checkState() {
         if (this.bookReady && this.rentReady) {
             this.initialized = true;
+            toast.dismiss();
             if (this.callback) {
-                toast.dismiss();
                 this.callback();
             }
         }
@@ -34,6 +70,13 @@ class Doc {
         this.checkState();
     }
 
+    setServerInfo(serverInfo)
+    {
+        this.serverInfo = serverInfo;
+        console.log(this.serverInfo.globalIp);
+        this.checkServerIp()
+    }
+
     setBook(books) {
         this.book = {};
         for (let i = 0 ; i < books.length ; i++)
@@ -46,10 +89,55 @@ class Doc {
         this.checkState();
     }
 
+    setUser(users) {
+        this.user = {};
+        for (let i = 0 ; i < users.length ; i++)
+        {
+            const user = users[i];
+            const id = user.id;
+            this.user[id] = user;
+            this.user[id]["rent"] = 0;
+        }
+        this.checkRent();
+        this.userReady = true;
+    }
+
+    checkRent() {
+        if (!this.userReady || !this.rentReady)
+            return;
+        console.log(this.rent);
+        for (let i = 0 ; i < this.rent.length ; i++)
+        {
+            const state = this.rent[i].state;
+
+//            console.log(state);
+            if (state !== "1" && state !== "3")
+                continue;
+
+            const userId = this.rent[i].user_id;
+//            console.log(this.rent[i]);
+            console.log(userId);
+            console.log(userId.length);
+            if (userId && userId.length > 0 && userId in this.user)
+                this.user[userId]["rent"] += 1;
+            else
+                this.user[userId]["rent"] = 1;
+        }
+        console.log(this.user);
+    }
+
+    setAdminMode(mode) {
+        this.adminMode = mode;
+        if (this.logCallback)
+            this.logCallback(true);
+    }
+
     logIn(userInfo) {
         console.log("Logged in: " + userInfo['_id']);
         this.logged = true;
         this.userInfo = userInfo;
+        if (userInfo['level'] === "2")
+            this.admin = true;
         if (this.logCallback)
             this.logCallback(true);
     }
@@ -65,6 +153,8 @@ class Doc {
     getRent(userId) {
         let ret = [];
         console.log("Check " + userId);
+        if (!this.bookReady)
+            return ret;
 //        console.log(this.rent.length);
         for (let i = 0 ; i < this.rent.length ; i++) {
             const entry = this.rent[i];
@@ -82,6 +172,10 @@ class Doc {
             ret.push(retEntry)
         }
         return ret;
+    }
+
+    getUser() {
+        return this.user;
     }
 
     async openDoc() {

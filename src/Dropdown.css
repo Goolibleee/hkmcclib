@@ -4,12 +4,21 @@
     position: absolute;
     min-width: 160px;
     right: 0;
-    top: 65px;
     list-style: none;
     text-align: right;
     font-size: 8;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
+    transform: translateX(100%);
+    transition: transform ease-out 0.2s;
+    top: 65px;
+    overflow: hidden;
+    border: 2px solid lightgray;
+    border-radius: 1rem;
+}
+
+.dropdown-menu.is-show {
+    transform: translateX(0%);
 }
 
 .dropdown-menu li {
@@ -23,16 +32,10 @@
     text-decoration: none;
 }
 
-.drop-menu {
-    display: none;
-    text-decoration: none;
-}
-
 .menu-items {
     display: grid;
     color: #113;
     padding: 15px;
-    border: 2px solid lightgray;
     background-color: white;
     font-size: 1.2rem;
     text-decoration: none;
@@ -41,13 +44,9 @@
 
 @media screen and (max-width: 1000px) {
     .dropdown-menu {
-        width: auto;
-        position: absolute;
         min-width: 160px;
-        top: 48px;
         font-size: 10;
         list-style: none;
-        text-align: start;
     }
 }
 
