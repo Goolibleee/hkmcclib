@@ -21,7 +21,7 @@ String.prototype.format = function() {
 }
 
 export const toastProp = {
-    position: "bottom-center",
+    position: "top-center",
     autoClose: 3000,
     hideProgressBar: true,
     closeOnClick: true,
@@ -31,11 +31,11 @@ export const toastProp = {
 }
 
 export const getUserState = function(text, state) {
-    if (state == "0")
+    if (state === "0")
         return text.normal;
-    else if (state == "1")
+    else if (state === "1")
         return text.overDue;
-    else if (state == "2")
+    else if (state === "2")
         return text.stopped;
 }
 

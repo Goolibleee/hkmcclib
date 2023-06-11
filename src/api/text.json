@@ -11,7 +11,7 @@
 		"logInFail": "Log In Failed",
 		"nameSuffix": "",
 		"home": "Home",
-		"checkOut": "Check Out Status",
+		"checkOutStatus": "Check Out Status",
 		"bookSearch": "Book Search",
 		"userSearch": "User Search",
 		"checkOut": "Check Out",
@@ -54,7 +54,9 @@
 		"returnSucceed" : "Returned",
 		"rentSuffix" : " book(s) rented",
 		"confirmRent" : "Rent this book?",
-		"confirmReturn" : "Return this book?"
+		"confirmReturn" : "Return this book?",
+		"confirm": "Confirm",
+		"cancel": "Cancel"
 	},
 	"kr": {
 		"titleLong": "천주교 산호세 한국 순교자 성당 도서관",
@@ -111,6 +113,8 @@
 		"returnSucceed" : "반납 완료",
 		"rentSuffix" : "권 대출 중",
 		"confirmRent" : "대출하시겠습니까?",
-		"confirmReturn" : "반납하시겠습니까?"
+		"confirmReturn" : "반납하시겠습니까?",
+		"confirm": "확인",
+		"cancel": "취소"
 	}
 }

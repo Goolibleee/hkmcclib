@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Reader from "./Reader";
 import "./Page.css"
 import { toast } from "react-toastify";
 import { toastProp, loggingId, loadingId, getBookState, getUserState } from "../Util";
 import { useDebounce } from "use-debounce";
-import { useLazyQuery } from "@apollo/client";
 import { Link } from 'react-router-dom'
-import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
 import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
@@ -19,36 +16,44 @@ const State = {
 
 function CheckOut(props) {
     const [userText, setUserText] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
     const [bookText, setBookText] = useState("");
     const [searchQuery] = useDebounce(bookText, 50);
-    const [initialized, setInitialized] = useState(false);
     const [userId, setUserId] = useState("");
     const [state, setState] = useState(State.LoggedOut);
     const [userData, setUserData] = useState({});
     const [scannedBook, setScannedBook] = useState({});
     const [needConfirm, setNeedConfirm] = useState(false);
     const [notifyRequest, setNotifyRequest] = useState({});
+    const [barcode, setBarcode] = useState("");
 
     useEffect(function () {
         async function initialize() {
-            updateDoc();
             console.log("=======================================");
             console.log("CheckOut initialize");
         }
 
+        const interval = setInterval(async () => {
+            const ipAddr = props.doc.serverInfo.localIp;
+            const portNum = props.doc.serverInfo.port;
+            if (ipAddr.length > 0 && portNum > 0)
+            {
+                const url = "https://" + ipAddr + ":" +
+                    portNum + "/scanBarcode";
+                axios.get(url).then( response => {
+                        const book = response.data.scan;
+                        if (book) {
+                            console.log(book)
+                            setBarcode(book)
+                        }
+                    }
+                );
+            }
+        }, 1000)
+
         initialize();
+        return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    useEffect(
-        () => {
-            console.log("User data updated ");
-            updateDoc();
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.logged]
-    );
 
     useEffect(
         () => {
@@ -94,7 +99,7 @@ function CheckOut(props) {
             console.log("book updated ");
             if ("BARCODE" in scannedBook)
             {
-                if (scannedBook._STATE == 0)
+                if (scannedBook._STATE === 0)
                 {
                     setNeedConfirm(true);
                 }
@@ -110,6 +115,7 @@ function CheckOut(props) {
             else
             {
                 setNeedConfirm(false);
+                setBarcode("")
             }
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,31 +124,34 @@ function CheckOut(props) {
 
     useEffect(
         () => {
-            if (! "text" in notifyRequest)
+            if (! ("text" in notifyRequest))
                 return
 
+            toast.dismiss();
+            console.log("Notification " + notifyRequest.text)
             const prop = toastProp;
-            const text = notifyRequest.text
             prop.type = notifyRequest.type
             prop.autoClose = 3000;
-            let id = 0
-            if ("id" in notifyRequest)
-                id = notifyRequest.id
+//            let id = 0
+//            if ("id" in notifyRequest)
+//                id = notifyRequest.id
 
-            prop.toastId = id
-            if (toast.isActive(id))
-                toast.update(id, notifyRequest.text, prop);
-            else
+//            prop.toastId = id
+//            if (toast.isActive(id))
+//                toast.update(id, notifyRequest.text, prop);
+//            else
                 toast.info(notifyRequest.text, prop);
 //            setNotifyRequest({})
         },
         [notifyRequest]
     );
 
-    async function updateDoc()
-    {
-        setInitialized(true);
-    }
+    useEffect(
+        () => {
+            if (state !== State.LoggedIn)
+                setBarcode(userText);
+        }, [userText]
+    );
 
     const showBook = (book, index) => {
         const id = book["BARCODE"];
@@ -165,27 +174,6 @@ function CheckOut(props) {
                 );
     }
 
-    const showEntries = (result) => {
-        return (<div>
-                    <table><tbody>
-                    <tr key="ID">
-                        <th id="id">{props.text.id}</th>
-                        <th id="rentDate">{props.text.rentDate}</th>
-                        <th id="returnDate">{props.text.returnDate}</th>
-                    </tr>
-                    {
-//                        result.map((rent, index) => {
-//                            return showBook(rent, index);
-//                        })
-                         "BARCODE" in result && showBook(result, result.BARCODE)
-                    }
-                    {
-                        result.length === 0 && <tr key="None"><td colSpan="3">{props.text.noEntry}</td></tr>
-                    }
-                    </tbody></table>
-                </div>);
-    }
-
     const updateUser = async (userText) => {
         const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/user?user=" + userText;
         const obj = {"params": {"user": userText, "data":"nothing"}};
@@ -199,7 +187,7 @@ function CheckOut(props) {
     const logIn = async () => {
         console.log("LOGIN");
         console.log(userText);
-        if (userText.length == 0)
+        if (userText.length === 0)
             return;
         setState(State.LoggingIn);
         const id = userText.toUpperCase();
@@ -210,8 +198,9 @@ function CheckOut(props) {
     const logOut = async () => {
         console.log("Log Out");
         setUserData({});
-        setScannedBook({});
         setUserText("");
+        setScannedBook({});
+        setBarcode("")
         document.getElementById('barcodeScan').value= null;
     }
 
@@ -235,6 +224,9 @@ function CheckOut(props) {
 //            setResult(file.type + " " + file.size.toString());
             const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/uploadImage"
             console.log(url)
+            setNotifyRequest({"id": loadingId,
+                              "text": props.text.loading,
+                              "type": toast.TYPE.INFO})
             getBase64(file).then(
                 img => {
                     axios({
@@ -259,12 +251,18 @@ function CheckOut(props) {
                         if ('BOOKNAME' in book)
                         {
                             setScannedBook(book)
+                            setNotifyRequest({"id": loadingId,
+                                              "text": props.text.succeededToOpen,
+                                              "type": toast.TYPE.SUCCESS});
                         }
                         else
                         {
+                            console.log("Failed");
                             setNotifyRequest({"id": loadingId,
                                               "text": props.text.INVALID_BOOK,
-                                              "type": toast.TYPE.ERROR})
+                                              "type": toast.TYPE.ERROR});
+                            setScannedBook({});
+                            setBarcode("")
                         }
                     });
                 }
@@ -295,6 +293,38 @@ function CheckOut(props) {
             }
         },
         [searchQuery]
+    );
+
+    useEffect(
+        () => {
+            console.log("Barcode: " + barcode);
+            if (barcode.length == 0)
+                return;
+            if (state !== State.LoggedIn)
+            {
+                setUserText(barcode);
+            }
+            else
+            {
+                const bookId = barcode;
+                console.log("Search book " + bookId);
+                const url = "https://" + props.doc.serverInfo.localIp + ":" +
+                    props.doc.serverInfo.port + "/book";
+//                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
+                const obj = {"params": {"book": bookId, "match": true}};
+                console.log(obj);
+                axios.get(url, obj).then( response => {
+                        const book = response.data.return;
+                        console.log(book)
+                        if ('BOOKNAME' in book)
+                        {
+                            setScannedBook(book)
+                        }
+                    }
+                );
+            }
+        },
+        [barcode]
     );
 
     function confirmAction()
@@ -343,6 +373,8 @@ function CheckOut(props) {
                                   "text": text,
                                   "type": toast.TYPE.ERROR})
             }
+            setScannedBook({});
+            setBarcode("")
             updateUser(userId);
         });
     }
@@ -352,8 +384,12 @@ function CheckOut(props) {
         console.log("Cancelled")
         setNeedConfirm(false);
         document.getElementById('barcodeScan').value= null;
+        setScannedBook({});
+        setBarcode("")
     }
 
+//            <div id="checkOutResult" hidden={state !== State.LoggedIn ? true : false }>
+//            <div id="checkOutResult" hidden={true}>
     return (
         <div id="checkOut">
             <div id="title">
@@ -365,7 +401,6 @@ function CheckOut(props) {
                 <input type="text" id="searchInput"
                     placeholder={props.text.idHolder}
                     value={userText}
-                    disabled={!initialized}
                     onInput={(event) => {
                         setUserText(event.target.value);
                     }} />
@@ -382,7 +417,7 @@ function CheckOut(props) {
                     </div>
                 )}
                 <div id="bookInput" hidden={needConfirm}>
-                    <label id="barcodeScan">
+                    <label id="barcodeScan" hidden>
                         <CameraAltIcon fontSize="large" sx={{color: "#404040"}} />
                         <span>
                         <input type="file" id="barcodeScanInput" accept="image/*" capture="environment" onChange={(e) => imageCaptured(e)} />
@@ -399,15 +434,13 @@ function CheckOut(props) {
                             }} />
                     </label>
                 </div>
-                {needConfirm && (<div id="checkRent">
+                <div id="checkRent" hidden={!needConfirm}>
                     <div id="bookName"> {props.text.confirmRent} </div>
                     <div id="bookName"> {scannedBook.AUTHOR + ": " + scannedBook.BOOKNAME} </div>
-                    <button id="confirm" onClick={() => confirmAction()}> Confirm </button>
-                    <button id="cancel" onClick={() => cancelAction()}> Cancel </button>
-                </div>)}
-                <div>
-                    <button id="logOutButton" onClick={() => logOut()}> {props.text.logOut} </button>
+                    <button id="confirm" onClick={() => confirmAction()}> {props.text.confirm} </button>
+                    <button id="cancel" onClick={() => cancelAction()}> {props.text.cancel} </button>
                 </div>
+                <button id="logOutButton" onClick={() => logOut()}> {props.text.logOut} </button>
             </div>
         </div>
     );

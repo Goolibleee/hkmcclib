@@ -11,7 +11,7 @@ function DropDown(props) {
         () => {
             if (dropdown !== props.dropdown)
             {
-                console.log("User clicked");
+                console.log("User clicked " + props.doc.logged);
                 console.log(props.dropdown);
                 setClick(!click);
                 setDropdown(props.dropdown);
@@ -39,26 +39,15 @@ function DropDown(props) {
         document.cookie = "autoLogin=false";
     }
 
-    const changeMode = () =>
-    {
-        if (props.doc.admin === true)
-            props.doc.setAdminMode(!props.doc.adminMode);
-        else
-            props.doc.setAdminMode(false);
-    }
-
-    const returnBook = () =>
-    {
-        console.log("Return book");
-        window.history.back()
-    }
-
     return (
             <div id='dropdown-menu' onClick={() => { setClick(!click)}} className='dropdown-menu'>
-                {!props.doc.serverAvailable && props.logged &&
+                {!props.doc.serverAvailable && props.doc.logged &&
+                    <>
                     <div className='menu-items'>
                         {props.doc.userInfo["_id"] + " : " + props.doc.userInfo["name"] + props.text.nameSuffix}
                     </div>
+                    <hr className="hline"/>
+                    </>
                 }
                 <Link className='menu-items' to="/" onClick={() => setClick(false)}>
                     {props.text.home}
@@ -66,11 +55,11 @@ function DropDown(props) {
                 <Link className='menu-items' to="/notice" onClick={() => setClick(false)}>
                     {props.text.notice}
                 </Link>
+                <Link className='menu-items' to="/search" onClick={() => setClick(false)}>
+                    {props.text.bookSearch}
+                </Link>
                 {props.doc.serverAvailable &&
                     <>
-                        <Link className='menu-items' to="/search" onClick={() => setClick(false)}>
-                            {props.text.bookSearch}
-                        </Link>
                         <Link className='menu-items' to="/checkOut" onClick={() => setClick(false)}>
                             {props.text.checkOut}
                         </Link>
@@ -79,38 +68,32 @@ function DropDown(props) {
                         </Link>
                     </>
                 }
-                {!props.doc.serverAvailable && props.logged &&
+                {!props.doc.serverAvailable && props.doc.logged &&
                     <>
-                        {!props.doc.adminMode &&
-                            <Link className='menu-items' to="/checkOutStatus" onClick={() => setClick(false)}>
-                                {props.text.checkOutStatus}
-                            </Link>
-                        }
-                        {props.doc.adminMode &&
+                        <Link className='menu-items' to="/checkOutStatus" onClick={() => setClick(false)}>
+                            {props.text.checkOutStatus}
+                        </Link>
+                        {props.doc.admin &&
                             <>
+                            <hr className="hline"/>
                             <Link className='menu-items' to="/userSearch" onClick={() => setClick(false)}>
                                 {props.text.userSearch}
                             </Link>
+                            <Link className='menu-items' to="/rentHistory" onClick={() => setClick(false)}>
+                                {props.text.history}
+                            </Link>
                             </>
                         }
-                        {props.doc.admin &&
-                            <div className='menu-items' onClick={() => changeMode()}>
-                                {props.doc.adminMode && props.text.userMode}
-                                {!props.doc.adminMode && props.text.adminMode}
-                            </div>
-                        }
+                        <hr className="hline"/>
                         <div className='menu-items' onClick={() => logOut()}>
                             {props.text.logOut}
                         </div>
                     </>
                 }
-                {!props.doc.serverAvailable && !props.logged &&
+                {!props.doc.serverAvailable && !props.doc.logged &&
                     <>
                         <Link className='menu-items' to="/checkOutStatus" onClick={() => setClick(false)}>
                             {props.text.logIn}
-                        </Link>
-                        <Link className='menu-items' to="/search" onClick={() => setClick(false)}>
-                            {props.text.bookSearch}
                         </Link>
                     </>
                 }

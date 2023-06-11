@@ -14,7 +14,7 @@ background-color: white;
     padding-top: 0px;
 }
 
-#search, #checkOut, #notice {
+#search, #checkOut, #notice, #return, #listView {
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -88,6 +88,13 @@ background-color: white;
     display: flex;
 }
 
+#listView {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+
 #userItem {
     width: 33%;
     padding: 15px;
@@ -105,8 +112,13 @@ background-color: white;
     float: left;
 }
 
-#bookInput {
+#bookInput, #userInfo {
     text-align: center;
+    width: 100%;
+    font-size: 1.1rem;
+    outline: none;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 #barcodeScan {
@@ -155,7 +167,7 @@ background-color: white;
     border: hidden;
 }
 
-#searchInput, #searchPassword, #logIn, #logOutButton, #confirm, #cancel {
+#searchInput, #searchPassword, #logIn, #logOutButton, #confirm, #cancel, #checkRent, #checkReturn {
     width: 100%;
     font-size: 1.1rem;
     border: 2px solid lightgray;
@@ -356,21 +368,22 @@ tr.searchTr {
     cursor: pointer;
 }
 
-td.bookData {
+td.bookData, td.bookName, td.bookRenter, td.bookCell {
     border: solid 1px lightgray;
 }
 
-td.bookName {
-    border: solid 1px lightgray;
+tr.bookRow, tr.bookTop, tr.bookBottom {
+    border-left: solid 2px gray;
+    border-right: solid 2px gray;
 }
 
-tr.bookData {
+tr.bookTop {
     border-top: solid 2px gray;
     border-left: solid 2px gray;
     border-right: solid 2px gray;
 }
 
-tr.bookName {
+tr.bookBottom {
     border-bottom: solid 2px gray;
     border-left: solid 2px gray;
     border-right: solid 2px gray;
@@ -401,6 +414,7 @@ td.content {
     width:5em;
     padding-top: 4px;
     padding-bottom: 4px;
+    cursor: pointer;
 }
 #pageNum {
     margin-top: 0;

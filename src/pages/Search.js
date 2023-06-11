@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./Page.css"
 import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
@@ -8,6 +8,7 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import ListView from "../ListView";
 
 let initialized = false;
 
@@ -16,8 +17,8 @@ function Search(props) {
     const [searchQuery] = useDebounce(inputText, 50);
     const [searchResults, setSearchResults] = useState([]);
     const [displayedCodes, setDisplayedCodes] = useState([]);
-    const [pageNum, setPageNum] = useState(0);
     const [selectedId, setSelectedId] = useState(0);
+    const selectedRef = useRef("0");
 
     const [bookList, setBookList] = useState([]);
     const [rentList, setRentList] = useState([]);
@@ -150,33 +151,14 @@ function Search(props) {
                     else
                         setSearchResults([]);
                     if (sr.length === 1)
-                        setSelectedId(sr[0].index);
+                        selectedRef.current = sr[0].code;
                 } else {
                     setSearchResults([]);
                 }
-                setPageNum(0);
             }
             query();
         },
         [searchQuery, bookList, rentList, props]
-    );
-
-    useEffect(
-        () => {
-            const length = searchResults.length;
-                console.log("Page num " + pageNum.toString());
-            if (length > SEARCH_PER_SCREEN)
-            {
-                const startIdx = pageNum * SEARCH_PER_SCREEN;
-                const count = Math.min(SEARCH_PER_SCREEN, length - startIdx);
-                setDisplayedCodes(searchResults.slice(startIdx,startIdx+count));
-            }
-            else
-            {
-                setDisplayedCodes(searchResults);
-                setPageNum(0);
-            }
-        }, [searchResults, pageNum]
     );
 
     async function updateDoc()
@@ -205,39 +187,28 @@ function Search(props) {
         setBookList(bl);
     }
 
-    function movePrev() {
-        if (pageNum > 0)
+    const selectId = async (code) => {
+        console.log("Prev " + selectedRef.current);
+        if (selectedRef.current === -1 || selectedRef.current !== code)
         {
-            setPageNum(pageNum - 1);
-        }
-    }
-
-    function moveNext() {
-        if (searchResults.length > (pageNum + 1) * SEARCH_PER_SCREEN)
-        {
-            setPageNum(pageNum + 1);
-        }
-    }
-
-    const selectId = async (id) => {
-        if (selectedId === -1 || selectedId !== id)
-        {
-            console.log("Select " + id);
-            setSelectedId(id);
+            console.log("Select " + code);
+            setSelectedId(code);
+            selectedRef.current = code;
         }
         else
         {
-            console.log("Deselect " + id);
+            console.log("Deselect " + code);
             setSelectedId(-1);
+            selectedRef.current = -1;
         }
     }
 
     const showEntry = (result) => {
-        const hidden = (result.index !== selectedId);
+        const hidden = (result.code !== selectedRef.current);
         const entryId = (hidden) ? "searchResult" : "selectedSearchResult";
         return (
             <div key={result.code}>
-            <div id={entryId} onClick={async () => await selectId(result.index)}>
+            <div id={entryId} onClick={async () => await selectId(result.code)}>
                 <table><tbody>
                     <tr className="searchTr">
                         <td className="searchTitle"> {result.text}</td>
@@ -267,6 +238,11 @@ function Search(props) {
         );
     }
 
+    function showEntries(results)
+    {
+        return results.map((result) => showEntry(result))
+    }
+
     return (
         <div id="search">
             <div id="title">
@@ -279,28 +255,10 @@ function Search(props) {
                     onChange={(event) => {
                         setInputText(event.target.value);
                     }} />
-
-                {displayedCodes.map((result) => showEntry(result))}
             </div>
-            {searchResults.length > SEARCH_PER_SCREEN && (
-                <div id="pageControl">
-                    <div className="page" id = "page">
-                        <NavigateBeforeIcon fontSize="large" sx={{color: (pageNum === 0) ? "#ffffff":"#404040"}} onClick={movePrev}/>
-                    </div>
-                    <div className="pageNum" id="pageNum">
-                        {pageNum+1}
-                    </div>
-                    <div className="page" id = "page">
-                        <NavigateNextIcon fontSize="large" sx={{color: (searchResults.length <= (pageNum + 1) * SEARCH_PER_SCREEN) ? "#ffffff":"#404040"}} onClick={moveNext}/>
-                    </div>
-                </div>
-            )}
+            <ListView list={searchResults} showCallback={(entries) => { return showEntries(entries); }}/>
         </div>
     );
 }
-//                        <NavigateBeforeIcon fontSize="large" hidden={pageNum === 0 ? "hidden":""} color="primary" onClick={movePrev}/>
-//                        <NavigateBeforeIcon id="prevPage" fontSize="large" color="primary" onClick={movePrev} />
-//                        {pageNum !== 0 ?
-//                         <button id="prevPage" hidden onClick={movePrev}> &lt;&lt; </button> : null}
 
 export default Search;

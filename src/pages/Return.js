@@ -32,6 +32,7 @@ function Return(props) {
     const [scannedBook, setScannedBook] = useState({});
     const [needConfirm, setNeedConfirm] = useState(false);
     const [notifyRequest, setNotifyRequest] = useState({});
+    const [barcode, setBarcode] = useState("");
 
     useEffect(function () {
         async function initialize() {
@@ -40,7 +41,26 @@ function Return(props) {
             console.log("Return initialize");
         }
 
+        const interval = setInterval(async () => {
+            const ipAddr = props.doc.serverInfo.localIp;
+            const portNum = props.doc.serverInfo.port;
+            if (ipAddr && ipAddr.length > 0 && portNum > 0)
+            {
+                const url = "https://" + ipAddr + ":" +
+                    portNum + "/scanBarcode";
+                axios.get(url).then( response => {
+                        const book = response.data.scan;
+                        if (book) {
+                            console.log(barcode + " -> " + book)
+                            setBarcode(book)
+                        }
+                    }
+                );
+            }
+        }, 1000)
+
         initialize();
+        return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -115,6 +135,33 @@ function Return(props) {
         },
         [searchQuery]
     );
+
+    useEffect(
+        () => {
+            console.log("B" + barcode);
+            if (barcode.length > 0)
+            {
+                const bookId = barcode;
+                console.log("Search book " + bookId);
+                const url = "https://" + props.doc.serverInfo.localIp + ":" +
+                    props.doc.serverInfo.port + "/book";
+//                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
+                const obj = {"params": {"book": bookId, "match": true}};
+                console.log(obj);
+                axios.get(url, obj).then( response => {
+                        const book = response.data.return;
+                        console.log(book)
+                        if ('BOOKNAME' in book)
+                        {
+                            setScannedBook(book)
+                        }
+                    }
+                );
+            }
+        },
+        [barcode]
+    );
+
     const showRented = (rent, index) => {
         const id = rent["id"];
         const rentDate = rent["rentDate"];
@@ -174,6 +221,9 @@ function Return(props) {
             console.log(file.type);
 //            setResult(file.type + " " + file.size.toString());
             const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/uploadImage"
+            setNotifyRequest({"id": loadingId,
+                              "text": props.text.loading,
+                              "type": toast.TYPE.INFO})
             getBase64(file).then(
                 img => {
                     const data = axios({
@@ -197,12 +247,17 @@ function Return(props) {
                         if ('BOOKNAME' in book)
                         {
                             setScannedBook(book)
+                            setNotifyRequest({"id": loadingId,
+                                              "text": props.text.succeededToOpen,
+                                              "type": toast.TYPE.SUCCESS});
                         }
                         else
                         {
                             setNotifyRequest({"id": loadingId,
                                               "text": props.text.INVALID_BOOK,
                                               "type": toast.TYPE.ERROR})
+                            setScannedBook({})
+                            setBarcode("")
                         }
                     });
                 }
@@ -221,12 +276,13 @@ function Return(props) {
                 }
                 else
                 {
-
+                    console.log("Not rented")
                     setNotifyRequest({"id": loadingId,
                                       "text": props.text.NOT_RENTED,
                                       "type": toast.TYPE.ERROR})
                     document.getElementById('barcodeScan').value= null;
                     setNeedConfirm(false);
+                    setBarcode("")
                 }
             }
             else
@@ -243,18 +299,19 @@ function Return(props) {
             if (! "text" in notifyRequest)
                 return
 
+            toast.dismiss();
             const prop = toastProp;
             const text = notifyRequest.text
             prop.type = notifyRequest.type
             prop.autoClose = 3000;
-            let id = 0
-            if ("id" in notifyRequest)
-                id = notifyRequest.id
+//            let id = 0
+//           if ("id" in notifyRequest)
+//               id = notifyRequest.id
 
-            prop.toastId = id
-            if (toast.isActive(id))
-                toast.update(id, notifyRequest.text, prop);
-            else
+//           prop.toastId = id
+ //          if (toast.isActive(id))
+//               toast.update(id, notifyRequest.text, prop);
+//           else
                 toast.info(notifyRequest.text, prop);
 //            setNotifyRequest({})
         },
@@ -286,9 +343,26 @@ function Return(props) {
         }).then( response => {
             const ret = response.data.return;
             console.log(ret);
-            setNotifyRequest({"id": loadingId,
-                              "text": props.text.returnSucceed,
-                              "type": toast.TYPE.SUCCESS})
+            if (ret == "SUCCESS")
+            {
+                setNotifyRequest({"id": loadingId,
+                                  "text": props.text.returnSucceed,
+                                  "type": toast.TYPE.SUCCESS})
+            }
+            else
+            {
+                let text
+                if (ret in props.text)
+                    text = props.text[ret];
+                else
+                    text = props.text.NOT_AVAILABLE;
+                console.log(text)
+                setNotifyRequest({"id": loadingId,
+                                  "text": text,
+                                  "type": toast.TYPE.ERROR})
+            }
+            setScannedBook({});
+            setBarcode("")
         });
     }
 
@@ -296,6 +370,8 @@ function Return(props) {
     {
         console.log("Cancelled")
         setNeedConfirm(false);
+        setScannedBook({});
+        setBarcode("")
     }
 
     return (
@@ -307,7 +383,7 @@ function Return(props) {
             </div>
             <div id="checkOutResult">
                 <div id="bookInput" hidden={needConfirm}>
-                <label id="barcodeScan">
+                <label id="barcodeScan" hidden>
                     <CameraAltIcon fontSize="large" sx={{color: "#404040"}} />
                     <span>
                     <input type="file" id="barcodeScanInput" accept="image/*" capture="environment" onChange={(e) => imageCaptured(e)} />
@@ -317,22 +393,23 @@ function Return(props) {
                     <div id="hkPrefix">
                         HK
                     </div>
-                    <input inputMode="numeric" pattern="[0-9]*" type="text" id="searchInput"
+                    <input inputMode="numeric" pattern="\d*" type="text" id="searchInput"
                         placeholder={props.text.bookHolder}
                         onInput={(event) => {
                             setBookText(event.target.value);
                         }} />
                 </label>
                 </div>
-                {needConfirm && (<div id="checkReturn" >
+                <div id="checkReturn" hidden={!needConfirm}>
                     <div id="bookName"> {props.text.confirmReturn} </div>
                     <div id="bookName"> {scannedBook.AUTHOR + ":" + scannedBook.BOOKNAME} </div>
-                    <button id="confirm" onClick={() => confirmAction()}> Confirm </button>
-                    <button id="cancel" onClick={() => cancelAction()}> Cancel </button>
-                </div>)}
+                    <button id="confirm" onClick={() => confirmAction()}> {props.text.confirm} </button>
+                    <button id="cancel" onClick={() => cancelAction()}> {props.text.cancel} </button>
+                </div>
             </div>
         </div>
     );
 }
+//                    <input inputMode="numeric" pattern="[0-9]*" type="text" id="searchInput"
 
 export default Return;

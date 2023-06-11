@@ -24,7 +24,7 @@ return (
             <div className='menu' onClick={onClick} >
                 <MenuIcon className="img" fontSize="large" sx={{ color: "#ffffff"}}/>
             </div>
-            <DropDown text={props.text} doc={props.doc} logged={props.logged} dropdown={dropdown}/>
+            <DropDown text={props.text} doc={props.doc} dropdown={dropdown}/>
         </div>
     </>
 )

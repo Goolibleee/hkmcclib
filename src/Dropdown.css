@@ -15,6 +15,14 @@
     overflow: hidden;
     border: 2px solid lightgray;
     border-radius: 1rem;
+    background: white;
+}
+
+.hline {
+    background-color: white;
+    background: white;
+    color: light-gray;
+    width: 80%;
 }
 
 .dropdown-menu.is-show {

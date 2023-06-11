@@ -6,6 +6,7 @@ import { toastProp, loggingId } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { Link } from 'react-router-dom'
 import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
+import ListView from "../ListView";
 
 const State = {
     LoggedOut: 0,
@@ -60,7 +61,7 @@ function CheckOutStatus(props) {
             updateDoc();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.logged]
+        [props.doc.logged]
     );
 
     useEffect(
@@ -132,7 +133,7 @@ function CheckOutStatus(props) {
             setPasswordText("");
         }
 
-        console.log("Set title " + props.logged)
+        console.log("Set title " + props.doc.logged)
         if (props.doc.logged)
         {
             if (props.doc.adminMode)
@@ -251,7 +252,7 @@ function CheckOutStatus(props) {
                     {title}
                 </h2>
             </div>
-            <div id="checkOutInput" hidden={state === State.LoggedIn}>
+            <div id="checkOutInput" hidden={!(state !== State.LoggedIn)}>
                 <input type="text" id="searchInput"
                     placeholder={props.text.idHolder}
                     value={userText}
@@ -274,18 +275,13 @@ function CheckOutStatus(props) {
                 </div>
                <button id="logIn" onClick={async () => logIn()}> {props.text.logIn} </button>
             </div>
-            <div id="checkOutResult" hidden={state !== State.LoggedIn}>
-                <Link className='menu-items' to="/barcodeReader">
-                    Scan
-                </Link>
+            <div id="checkOutResult" hidden={!(state === State.LoggedIn)}>
                 <div>
                     { showEntries(searchResults) }
                 </div>
 
                 <div id="name">{props.text.history}</div>
-                <div>
-                    { showEntries(history) }
-                </div>
+                <ListView list={history} showCallback={(entries) => { return showEntries(entries); }}/>
             </div>
         </div>
     );

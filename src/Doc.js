@@ -33,14 +33,14 @@ class Doc {
 
     checkServerIp()
     {
-        if (this.ipAddr.length == 0 || !this.serverInfo.globalIp)
+        if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
             return
         if (this.serverInfo.globalIp === this.ipAddr)
         {
             console.log("Server is accessible " + this.serverInfo.localIp);
             this.serverAvailable = true;
             const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
-//            window.open(query);
+            window.open(query);
             axios.get(query).then( (response) => {
                                 console.log("Server connected");
                                 console.log(response.data);
@@ -68,6 +68,7 @@ class Doc {
         this.rent = rent
         this.rentReady = true;
         this.checkState();
+        this.checkRent();
     }
 
     setServerInfo(serverInfo)
@@ -98,13 +99,16 @@ class Doc {
             this.user[id] = user;
             this.user[id]["rent"] = 0;
         }
-        this.checkRent();
         this.userReady = true;
+        this.checkRent();
     }
 
     checkRent() {
         if (!this.userReady || !this.rentReady)
+        {
+            console.log("Cannot check rent");
             return;
+        }
         console.log(this.rent);
         for (let i = 0 ; i < this.rent.length ; i++)
         {
@@ -150,7 +154,7 @@ class Doc {
             this.logCallback(false);
     }
 
-    getRent(userId) {
+    getRent(userId = undefined) {
         let ret = [];
         console.log("Check " + userId);
         if (!this.bookReady)
@@ -158,17 +162,21 @@ class Doc {
 //        console.log(this.rent.length);
         for (let i = 0 ; i < this.rent.length ; i++) {
             const entry = this.rent[i];
-            if (entry["user_id"] !== userId)
+            if (userId !== undefined && entry.user_id !== userId)
+                continue;
+//            console.log(entry)
+            if (entry.state !== "1" && entry.state !== "3")
                 continue;
 //            console.log(entry);
             const id = entry["book_id"];
             const book = this.book[id];
 //            console.log(book)
             let retEntry = {}
-            retEntry["id"] = book["_id"];
-            retEntry["title"] = book["title"];
-            retEntry["rentDate"] = entry["rent_date"].split(" ")[0].replace("-","/",2).replace("-", "/")
-            retEntry["retDate"] = entry["return_date"].split(" ")[0].replace("-","/",2).replace("-", "/")
+            retEntry["id"] = book._id
+            retEntry["title"] = book.title
+            retEntry["rentDate"] = entry.rent_date.split(" ")[0].replace("-","/",2).replace("-", "/")
+            retEntry["retDate"] = entry.return_date.split(" ")[0].replace("-","/",2).replace("-", "/")
+            retEntry["user"] = entry.user_id;
             ret.push(retEntry)
         }
         return ret;

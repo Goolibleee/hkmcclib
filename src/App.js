@@ -8,6 +8,7 @@ import CheckOutStatus from "./pages/CheckOutStatus";
 import CheckOut from "./pages/CheckOut";
 import Return from "./pages/Return";
 import UserSearch from "./pages/UserSearch";
+import RentHistory from "./pages/RentHistory";
 import Reader from "./pages/Reader";
 
 import { ToastContainer } from "react-toastify";
@@ -145,7 +146,7 @@ function App() {
 
                 if (!doc.serverAvailable)
                 {
-                    console.log("Server in not available. Load books from cloud DB");
+                    console.log("Server is not available. Load books from cloud DB");
                     loadBook();
                     const prop = toastProp;
                     prop.type = toast.TYPE.LOADING;
@@ -177,17 +178,6 @@ function App() {
     return (
     <Router>
         <div className="App">
-            <Navbar doc={doc} text={textString} logged={logged}/>
-            <Routes>
-                <Route path="/" element={<Home doc={doc} text={textString}/>} />
-                <Route path="/notice" element={<Notice doc={doc} text={textString} />} />
-                <Route path="/search/:id?" element={<Search doc={doc} text={textString}/>} />
-                <Route path="/checkOutStatus" element={<CheckOutStatus context={context} doc={doc} text={textString} logged={logged}/>} />
-                <Route path="/userSearch" element={<UserSearch context={context} doc={doc} text={textString} />} />
-                <Route path="/checkOut" element={<CheckOut context={context} doc={doc} text={textString} logged={logged}/>} />
-                <Route path="/return" element={<Return context={context} doc={doc} text={textString} logged={logged}/>} />
-            </Routes>
-
             <div>
                 <ToastContainer
                     newestOnTop
@@ -197,9 +187,21 @@ function App() {
                     pauseOnHover
                     pauseOnFocusLoss={false}
                     transition={Zoom}
-                    limit={2}
+                    limit={10}
                 />
             </div>
+            <Navbar doc={doc} text={textString}/>
+            <Routes>
+                <Route path="/" element={<Home doc={doc} text={textString}/>} />
+                <Route path="/notice" element={<Notice doc={doc} text={textString} />} />
+                <Route path="/search/:id?" element={<Search doc={doc} text={textString}/>} />
+                <Route path="/checkOutStatus" element={<CheckOutStatus context={context} doc={doc} text={textString} logged={logged}/>} />
+                <Route path="/userSearch/:id?" element={<UserSearch context={context} doc={doc} text={textString} />} />
+                <Route path="/checkOut" element={<CheckOut context={context} doc={doc} text={textString}/>} />
+                <Route path="/return" element={<Return context={context} doc={doc} text={textString}/>} />
+                <Route path="/rentHistory" element={<RentHistory context={context} doc={doc} text={textString}/>} />
+            </Routes>
+
             <h3>
                 v {process.env.REACT_APP_VERSION}
             </h3>
