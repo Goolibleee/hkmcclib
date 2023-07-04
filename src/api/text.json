@@ -17,6 +17,7 @@
 		"checkOut": "Check Out",
 		"return": "Return",
 		"history": "Rent History",
+		"situation": "Rent Situation",
 		"loading": "Loading DB",
 		"succeededToOpen" : "Succeeded to load",
 		"searchUser" : "Enter name or ID",
@@ -35,6 +36,7 @@
 		"bookName" : "Book name",
 		"rentDate" : "Rent date",
 		"returnDate" : "Return date",
+		"dueDate": "Due date",
 		"noEntry" : "No entry",
 		"notice" : "Notice",
 		"newMember" : "New Member",
@@ -63,13 +65,15 @@
 		"phone": "Phone",
 		"email": "Email",
 		"address": "Address",
-		"notice": "Notice",
+		"notice_": "Notice",
 		"level": "Level",
 		"save": "Save",
 		"confirmSave": "Save the modification?",
 		"kid": "Kid",
 		"adult": "Adult",
-		"admin": "Admin"
+		"admin": "Admin",
+		"regSuccess": "Registration Succeed",
+		"regFail": "Registration Fail"
 	},
 	"kr": {
 		"titleLong": "천주교 산호세 한국 순교자 성당 도서관",
@@ -89,6 +93,7 @@
 		"checkOut": "대출",
 		"return": "반납",
 		"history": "대출 이력",
+		"situation": "대출 현황",
 		"loading": "DB 조회 중",
 		"succeededToOpen" : "DB 조회 완료",
 		"searchUser" : "이름 또는 회원번호를 입력하세요",
@@ -107,6 +112,7 @@
 		"bookName" : "도서명",
 		"rentDate" : "대출일",
 		"returnDate" : "반납일",
+		"dueDate": "대출기한",
 		"noEntry" : "내역 없음",
 		"notice" : "공지 사항",
 		"newMember" : "신규 회원",
@@ -135,12 +141,14 @@
 		"phone": "전화번호",
 		"email": "이메일",
 		"address": "주소",
-		"notice": "비고",
+		"notice_": "비고",
 		"level": "등급",
 		"save": "저장",
 		"confirmSave": "저장하시겠습니까?",
 		"kid": "아동",
 		"adult": "성인",
-		"admin": "관리자"
+		"admin": "관리자",
+		"regSuccess": "등록 완료",
+		"regFail": "등록 실패"
 	}
 }

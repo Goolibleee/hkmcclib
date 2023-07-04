@@ -8,6 +8,7 @@ import CheckOutStatus from "./pages/CheckOutStatus";
 import CheckOut from "./pages/CheckOut";
 import Return from "./pages/Return";
 import UserSearch from "./pages/UserSearch";
+import RentalSituation from "./pages/RentalSituation";
 import RentHistory from "./pages/RentHistory";
 import NewMember from "./pages/NewMember";
 //import Reader from "./pages/Reader";
@@ -202,6 +203,7 @@ function App() {
                 <Route path="/userSearch/:id?" element={<UserSearch context={context} doc={doc} text={textString} />} />
                 <Route path="/checkOut" element={<CheckOut context={context} doc={doc} text={textString}/>} />
                 <Route path="/return" element={<Return context={context} doc={doc} text={textString}/>} />
+                <Route path="/rentalSituation" element={<RentalSituation context={context} doc={doc} text={textString}/>} />
                 <Route path="/rentHistory" element={<RentHistory context={context} doc={doc} text={textString}/>} />
                 <Route path="/newMember" element={<NewMember context={context} doc={doc} text={textString}/>} />
             </Routes>

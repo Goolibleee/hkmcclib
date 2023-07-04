@@ -81,6 +81,9 @@ function DropDown(props) {
                     <Link className='menu-items' to="/userSearch" onClick={() => setClick(false)}>
                         {props.text.userSearch}
                     </Link>
+                    <Link className='menu-items' to="/rentalSituation" onClick={() => setClick(false)}>
+                        {props.text.situation}
+                    </Link>
                     <Link className='menu-items' to="/rentHistory" onClick={() => setClick(false)}>
                         {props.text.history}
                     </Link>

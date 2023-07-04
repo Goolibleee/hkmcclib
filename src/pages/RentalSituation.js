@@ -25,28 +25,6 @@ function RentHistory(props) {
             console.log("=======================================");
             console.log("RentHistory initialize");
 
-            var year = document.getElementById('year')
-            var month = document.getElementById('month')
-            var all = document.createElement('option');
-            all.text = "All";
-            month.add(all, 0);
-            for (var i = 1; i <= 12 ; i++)
-            {
-                var option = document.createElement('option');
-                option.text = i.toString();
-                month.add(option, i);
-            }
-            const thisYear = new Date().getFullYear();
-            const fromYear = 2017;
-
-            for (var i = fromYear ; i <= thisYear ; i++)
-            {
-                var option = document.createElement('option');
-                option.text = i.toString();
-                year.add(option, i);
-            }
-
-
             if (props.doc.serverAvailable)
             {
                 updateDoc();
@@ -204,7 +182,7 @@ function RentHistory(props) {
                     <tr key="ID">
                         <th id="id">{props.text.id}</th>
                         <th id="rentDate">{props.text.rentDate}</th>
-                        <th id="returnDate">{props.text.returnDate}</th>
+                        <th id="returnDate">{props.text.dueDate}</th>
                     </tr>
                     {
                         result &&
@@ -218,28 +196,13 @@ function RentHistory(props) {
                     </tbody></table>
                 </div>);
     }
-    function setProperty(index, value)
-    {
-        console.log(index);
-        console.log(value);
-    }
-
-    function search()
-    {
-        console.log("Search")
-    }
 
     return (
-        <div id="checkOut">
+        <div id="situation">
             <div id="title">
                 <h2>
-                    {props.text.history}
+                    {props.text.situation}
                 </h2>
-            </div>
-            <div id="searchRange">
-                <select name="year" id="year" className="dropdown" onChange={(event) => {setProperty(0, event.target.value);}}/>
-                <select name="month" id="month" className="dropdown" onChange={(event) => {setProperty(1, event.target.value);}}/>
-                <button id="searchButton" onClick={() => search()}> search </button>
             </div>
             <div id="checkOutResult">
                 <ListView list={rentList} showCallback={(entries) => { return showEntries(entries); }}/>

@@ -14,7 +14,7 @@ background-color: white;
     padding-top: 0px;
 }
 
-#search, #checkOut, #notice, #return, #listView {
+#search, #checkOut, #situation, #notice, #return, #listView {
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -23,6 +23,24 @@ background-color: white;
     margin: 20px auto;
     margin-top: 0;
     padding: 20px;
+}
+
+#searchRange {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    font-size: 1.3rem;
+    padding: 1rem;
+    align-items: center;
+}
+
+#searchButton {
+    width: 5rem;
+    height: 3rem;
+    font-size: 1.3rem;
+    margin-left: 1rem;
 }
 
 #title {
@@ -86,6 +104,8 @@ background-color: white;
 #userInfo {
     align-items: center;
     display: flex;
+    padding: 0px;
+    margin: 0px;
 }
 
 #listView {
@@ -97,10 +117,12 @@ background-color: white;
 
 #userItem {
     width: 33%;
-    padding: 15px;
+    padding-top: 15px;
+    padding-bottom: 15px;
     font-size: 1.2rem;
     text-decoration: none;
     text-align: center;
+    margin: 0px;
 }
 
 #name, #logOut {
@@ -112,7 +134,7 @@ background-color: white;
     float: left;
 }
 
-#bookInput, #userInfo {
+#bookInput {
     text-align: center;
     width: 100%;
     font-size: 1.1rem;
@@ -151,7 +173,7 @@ background-color: white;
     margin-left: 5px;
 }
 
-#notice {
+#notice_ {
     text-align: center;
     padding-top: 15px;
     width: 100%;
@@ -452,7 +474,7 @@ td.content {
         margin-left: 0em;
         margin-right: 0em;
     }
-    #search, #checkOut, #notice {
+    #search, #checkOut, #situation, #notice {
         padding: 0px;
     }
 }

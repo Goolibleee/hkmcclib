@@ -123,7 +123,7 @@ function UserInfo(props) {
                     </td>
                 </tr>
                 <tr key="Notice">
-                    <td> {props.text.notice} </td>
+                    <td> {props.text.notice_} </td>
                     <td colSpan="3">
                         <input type="text" className="input" id="notice_" onChange={(event) => {setProperty(5, event.target.value);}} />
                     </td>
