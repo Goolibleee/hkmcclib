@@ -1,0 +1,77 @@
+.input {
+    font-size: 100%;
+    width: 100%;
+    height: 100%;
+    border: hidden;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.dropdown {
+    font-size: 100%;
+    height: 100%;
+    border: hidden;
+    padding-left: 1em;
+    padding-right: 1em;
+    background-color: #ffffff;
+}
+
+.cell {
+    text-align: left;
+}
+
+.data {
+    font-size: 100%;
+    width: 100%;
+    height: 100%;
+    padding-left: 1em;
+    padding-right: 1em;
+    text-align: left;
+    background-color: #f0f0f0;
+}
+
+#modify
+{
+    margin-top: 10px;
+    width: 100%;
+    font-size: 1.1rem;
+    border: 2px solid lightgray;
+    border-radius: 1rem;
+    outline: none;
+    padding: 1rem;
+    box-sizing: border-box;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+#checkModify {
+    width: 100%;
+    font-size: 1.1rem;
+    border: 2px solid lightgray;
+    border-radius: 1rem;
+    outline: none;
+    padding: 1rem;
+    box-sizing: border-box;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+#noticeMsg {
+    text-align: center;
+    padding-top: 15px;
+    width: 100%;
+    margin-left: 5px;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+#confirm, #cancel {
+    width: 100%;
+    font-size: 1.1rem;
+    border: 2px solid lightgray;
+    border-radius: 1rem;
+    outline: none;
+    padding: 1rem;
+    box-sizing: border-box;
+    text-align: center;
+}

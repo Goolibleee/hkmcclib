@@ -1,34 +1,21 @@
 import React, { useEffect, useState } from "react";
-import Reader from "./Reader";
 import "./Page.css"
 import { toast } from "react-toastify";
-import { toastProp, loadingId, toUtf8 } from "../Util";
+import { toastProp, loadingId } from "../Util";
 import { useDebounce } from "use-debounce";
-import { useLazyQuery } from "@apollo/client";
-import { Link } from 'react-router-dom'
-import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
 import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
-
-const State = {
-    LoggedOut: 0,
-    LoggingIn: 1,
-    LoggedIn:  2
-}
 
 function Return(props) {
     const [bookText, setBookText] = useState("");
     const [searchQuery] = useDebounce(bookText, 50);
-    const [initialized, setInitialized] = useState(false);
-    const [userId, setUserId] = useState("");
-    const [state, setState] = useState(State.LoggedOut);
-    const [history, setHistory] = useState([]);
-    const [autoLogin, setAutoLogin] = useState(false);
-    const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY,
-                     { "variables": { "_id": userId } });
-    const [loadHistory, { data: historyData }] = useLazyQuery(HISTORY_QUERY,
-                     { "variables": { "user_id": userId } });
-    const [title, setTitle] = useState("");
+//    const [initialized, setInitialized] = useState(false);
+//    const [userId, setUserId] = useState("");
+//    const [state, setState] = useState(State.LoggedOut);
+//    const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY,
+//                     { "variables": { "_id": userId } });
+//    const [loadHistory, { data: historyData }] = useLazyQuery(HISTORY_QUERY,
+//                     { "variables": { "user_id": userId } });
     const [scannedBook, setScannedBook] = useState({});
     const [needConfirm, setNeedConfirm] = useState(false);
     const [notifyRequest, setNotifyRequest] = useState({});
@@ -42,6 +29,8 @@ function Return(props) {
         }
 
         const interval = setInterval(async () => {
+            if (!("localIp" in props.doc.serverInfo) || !("port" in props.doc.serverInfo))
+                return;
             const ipAddr = props.doc.serverInfo.localIp;
             const portNum = props.doc.serverInfo.port;
             if (ipAddr && ipAddr.length > 0 && portNum > 0)
@@ -64,6 +53,7 @@ function Return(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+/*
     useEffect(
         () => {
             let rawHist = [];
@@ -105,18 +95,14 @@ function Return(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [historyData, props.doc.bookReady, props.doc.rentReady]
     );
-
-    async function updateDoc(notify = true)
-    {
-        setInitialized(true);
-    }
+*/
 
     useEffect(
         () => {
             if (bookText.length > 0)
             {
                 const bookId = "HK" + bookText;
-                console.log("Search book " + bookId);
+                console.log("Search book1 " + bookId);
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
 //                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
@@ -125,15 +111,16 @@ function Return(props) {
                 axios.get(url, obj).then( response => {
                         const book = response.data.return;
                         console.log(book)
-                        if ('BOOKNAME' in book)
+//                        if ('BOOKNAME' in book)
+                        if ('books' in book && 'BOOKNAME' in book.books)
                         {
-                            setScannedBook(book)
+                            setScannedBook(book.books)
                         }
                     }
                 );
             }
         },
-        [searchQuery]
+        [searchQuery, bookText, props.doc]
     );
 
     useEffect(
@@ -142,7 +129,7 @@ function Return(props) {
             if (barcode.length > 0)
             {
                 const bookId = barcode;
-                console.log("Search book " + bookId);
+                console.log("Search book2 " + bookId);
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
 //                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
@@ -151,56 +138,17 @@ function Return(props) {
                 axios.get(url, obj).then( response => {
                         const book = response.data.return;
                         console.log(book)
-                        if ('BOOKNAME' in book)
+//                        if ('BOOKNAME' in book)
+                        if ('books' in book && 'BOOKNAME' in book.books)
                         {
-                            setScannedBook(book)
+                            setScannedBook(book.books)
                         }
                     }
                 );
             }
         },
-        [barcode]
+        [barcode, props.doc]
     );
-
-    const showRented = (rent, index) => {
-        const id = rent["id"];
-        const rentDate = rent["rentDate"];
-        const retDate = rent["retDate"];
-        const bookName = rent["title"];
-        const key = index.toString();
-        return (<React.Fragment key={key + "Fragment"}>
-                    <tr key={key} className="bookData">
-                        <td className="bookData"><Link to={"/search/"+id}>{id}</Link></td>
-                        <td className="bookData">{rentDate}</td>
-                        <td className="bookData">{retDate}</td>
-                    </tr>
-                    <tr key={key + "Title"} className="bookName">
-                        <td colSpan="3" className="bookName">{bookName}</td>
-                    </tr>
-                </React.Fragment>
-                );
-    }
-
-
-    const showEntries = (result) => {
-        return (<div>
-                    <table><tbody>
-                    <tr key="ID">
-                        <th id="id">{props.text.id}</th>
-                        <th id="rentDate">{props.text.rentDate}</th>
-                        <th id="returnDate">{props.text.returnDate}</th>
-                    </tr>
-                    {
-                        result.map((rent, index) => {
-                            return showRented(rent, index);
-                        })
-                    }
-                    {
-                        result.length === 0 && <tr key="None"><td colSpan="3">{props.text.noEntry}</td></tr>
-                    }
-                    </tbody></table>
-                </div>);
-    }
 
     function getBase64(file) {
         return new Promise((resolve, reject) => {
@@ -226,7 +174,7 @@ function Return(props) {
                               "type": toast.TYPE.INFO})
             getBase64(file).then(
                 img => {
-                    const data = axios({
+                    axios({
                         method: "post",
                         mode: 'no-cors',
                         crossDomain: 'true',
@@ -270,7 +218,7 @@ function Return(props) {
             console.log("book updated ");
             if ("BARCODE" in scannedBook)
             {
-                if (scannedBook._STATE == 1 || scannedBook._STATE == 3)
+                if (scannedBook._STATE === 1 || scannedBook._STATE === 3)
                 {
                     setNeedConfirm(true);
                 }
@@ -296,12 +244,11 @@ function Return(props) {
 
     useEffect(
         () => {
-            if (! "text" in notifyRequest)
+            if (! ("text" in notifyRequest))
                 return
 
             toast.dismiss();
             const prop = toastProp;
-            const text = notifyRequest.text
             prop.type = notifyRequest.type
             prop.autoClose = 3000;
 //            let id = 0
@@ -325,7 +272,7 @@ function Return(props) {
         console.log(scannedBook);
 
         const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/return"
-        const data = axios({
+        axios({
             method: "post",
             mode: 'no-cors',
             crossDomain: 'true',
@@ -343,7 +290,7 @@ function Return(props) {
         }).then( response => {
             const ret = response.data.return;
             console.log(ret);
-            if (ret == "SUCCESS")
+            if (ret === "SUCCESS")
             {
                 setNotifyRequest({"id": loadingId,
                                   "text": props.text.returnSucceed,

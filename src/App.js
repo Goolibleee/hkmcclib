@@ -9,7 +9,8 @@ import CheckOut from "./pages/CheckOut";
 import Return from "./pages/Return";
 import UserSearch from "./pages/UserSearch";
 import RentHistory from "./pages/RentHistory";
-import Reader from "./pages/Reader";
+import NewMember from "./pages/NewMember";
+//import Reader from "./pages/Reader";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -32,6 +33,7 @@ let logMsg = ""
 function App() {
 
 //    const [checkOutStr, setCheckOutStr] = useState("");
+    const [initialized, setInitialized] = useState(false);
     const [logged, setLogged] = useState(false);
     const [userId, setUserId] = useState("");
     const { loading: rentLoading, error: rentError, data: rentData } = useQuery(RENT_QUERY);
@@ -70,7 +72,7 @@ function App() {
                 console.log(context.cookie.nothing);
                 loadUser();
             }
-
+            setInitialized(true);
         }
         initialize();
     }, [loadUser]);
@@ -135,28 +137,29 @@ function App() {
         () => {
             console.log("Server Query Updated");
             logMsg = logMsg + "<p>Server Query Updated</p>";
-            console.log(serverLoading)
-            console.log(serverError)
-            if (serverData)
-            {
-                console.log("Server info available")
-                logMsg = logMsg + "<p>Server info available</p>";
-                console.log(serverData.serverInfo)
-                doc.setServerInfo(serverData.serverInfo)
 
-                if (!doc.serverAvailable)
-                {
-                    console.log("Server is not available. Load books from cloud DB");
-                    loadBook();
-                    const prop = toastProp;
-                    prop.type = toast.TYPE.LOADING;
-                    prop.autoClose = false;
-                    prop.toastId = loadingId;
-                    toast.loading(textString.loading, prop);
-                    doc.setLogCallback(updateLog);
-                }
+            console.log(serverData);
+            console.log(initialized);
+            if (!serverData || !initialized)
+                return
+
+            console.log("Server info available")
+            logMsg = logMsg + "<p>Server info available</p>";
+            console.log(serverData.serverInfo)
+            doc.setServerInfo(serverData.serverInfo)
+
+            if (!doc.serverAvailable)
+            {
+                console.log("Server is not available. Load books from cloud DB");
+                loadBook();
+                const prop = toastProp;
+                prop.type = toast.TYPE.LOADING;
+                prop.autoClose = false;
+                prop.toastId = loadingId;
+                toast.loading(textString.loading, prop);
+                doc.setLogCallback(updateLog);
             }
-        }, [serverLoading, serverError, serverData]
+        }, [serverLoading, serverError, serverData, loadBook, initialized]
     );
 
     function notifyInit()
@@ -200,6 +203,7 @@ function App() {
                 <Route path="/checkOut" element={<CheckOut context={context} doc={doc} text={textString}/>} />
                 <Route path="/return" element={<Return context={context} doc={doc} text={textString}/>} />
                 <Route path="/rentHistory" element={<RentHistory context={context} doc={doc} text={textString}/>} />
+                <Route path="/newMember" element={<NewMember context={context} doc={doc} text={textString}/>} />
             </Routes>
 
             <h3>

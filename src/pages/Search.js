@@ -1,11 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./Page.css"
-import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
-import { toastProp } from "../Util";
-import { SEARCH_PER_SCREEN, MAX_SEARCH_ENTRY, getBookState, toUtf8 } from "../Util";
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { MAX_SEARCH_ENTRY, getBookState, toUtf8 } from "../Util";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import ListView from "../ListView";
@@ -16,7 +12,6 @@ function Search(props) {
     const [inputText, setInputText] = useState("");
     const [searchQuery] = useDebounce(inputText, 50);
     const [searchResults, setSearchResults] = useState([]);
-    const [displayedCodes, setDisplayedCodes] = useState([]);
     const [selectedId, setSelectedId] = useState(0);
     const selectedRef = useRef("0");
 
@@ -62,15 +57,16 @@ function Search(props) {
                     console.log(btoa(toUtf8(text)));
                     const url = "https://" + props.doc.serverInfo.localIp + ":" +
                         props.doc.serverInfo.port + "/book";
-                    const obj = {"params": {"book": btoa(toUtf8(text)), "metch":false}};
+                    const obj = {"params": {"book": btoa(toUtf8(text)), "match":false}};
                     console.log(obj);
                     const response = await axios.get(url, obj);
                     console.log(response)
-                    const books = response.data.return;
+                    if (!("books" in response.data.return))
+                        return results;
+                    const books = response.data.return.books;
                     let retDate = "";
                     for (let i = 0 ; i < books.length ; i++)
                     {
-                        const entry = {};
                         const book = books[i];
                         const resultString = `${book.BOOKNAME} ${book.CLAIMNUM}`;
                         const state = book._STATE;
@@ -104,7 +100,6 @@ function Search(props) {
                             (row.code === text))
                         {
                             let resultString = `${row.name} ${row.claim_num}`;
-                            let rent = props.text.available;
                             let retDate = "";
                             let state = "0";
                             for (const entry of rentList)
@@ -119,10 +114,6 @@ function Search(props) {
                                     break;
                                 }
                             }
-    //                        if (rentList.includes(row.code))
-    //                            rent = props.text.checkedOut;
-    //                        else
-    //                            rent = props.text.available;
                             let resultObject = {
                                 index: i,
                                 text: resultString,

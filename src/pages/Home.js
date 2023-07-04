@@ -1,7 +1,5 @@
 import React, { useEffect } from "react";
-import { toast } from "react-toastify";
 import "./Home.css";
-import { toastProp } from "../Util";
 
 function Home(props) {
     useEffect(function () {

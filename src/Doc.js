@@ -14,7 +14,6 @@ class Doc {
         this.rent = {};
         this.logCallback = undefined;
         this.admin = false;
-        this.adminMode = false;
         this.serverInfo = {};
         this.serverAvailable = false;
         this.ipAddr = ""
@@ -22,7 +21,8 @@ class Doc {
 
     async updateIpAddr()
     {
-        const response = await axios.get("https://api.ipify.org/?format=json");
+        const response = await axios.get("https://ipv4.seeip.org/jsonip");
+//        "https://api.ipify.org/?format=json"
         console.log("Get IP Address");
         console.log(response.data);
         const ipAddr = response.data.ip;
@@ -38,13 +38,19 @@ class Doc {
         if (this.serverInfo.globalIp === this.ipAddr)
         {
             console.log("Server is accessible " + this.serverInfo.localIp);
-            this.serverAvailable = true;
             const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
-            window.open(query);
-            axios.get(query).then( (response) => {
-                                console.log("Server connected");
-                                console.log(response.data);
-                          });
+            this.serverAvailable = true;
+            axios.get(query, {timeout: 1000})
+                .then( (response) => {
+                    console.log("Server connected");
+                    console.log(response.data);
+                    this.admin = response.data.admin;
+                    this.initialized = true;
+                })
+                .catch(error => {
+                  const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
+                  window.open(query);
+                });
         }
     }
 
@@ -130,12 +136,6 @@ class Doc {
         console.log(this.user);
     }
 
-    setAdminMode(mode) {
-        this.adminMode = mode;
-        if (this.logCallback)
-            this.logCallback(true);
-    }
-
     logIn(userInfo) {
         console.log("Logged in: " + userInfo['_id']);
         this.logged = true;
@@ -154,30 +154,53 @@ class Doc {
             this.logCallback(false);
     }
 
-    getRent(userId = undefined) {
+    async getRent(userId = undefined) {
         let ret = [];
-        console.log("Check " + userId);
-        if (!this.bookReady)
-            return ret;
-//        console.log(this.rent.length);
-        for (let i = 0 ; i < this.rent.length ; i++) {
-            const entry = this.rent[i];
-            if (userId !== undefined && entry.user_id !== userId)
-                continue;
-//            console.log(entry)
-            if (entry.state !== "1" && entry.state !== "3")
-                continue;
-//            console.log(entry);
-            const id = entry["book_id"];
-            const book = this.book[id];
-//            console.log(book)
-            let retEntry = {}
-            retEntry["id"] = book._id
-            retEntry["title"] = book.title
-            retEntry["rentDate"] = entry.rent_date.split(" ")[0].replace("-","/",2).replace("-", "/")
-            retEntry["retDate"] = entry.return_date.split(" ")[0].replace("-","/",2).replace("-", "/")
-            retEntry["user"] = entry.user_id;
-            ret.push(retEntry)
+        if (this.serverAvailable) {
+            const url = "https://" + this.serverInfo.localIp + ":" +
+                this.serverInfo.port + "/book";
+            const obj = {"params": {"user": userId}};
+            console.log(obj);
+            const result = await axios.get(url, obj);
+            console.log(result);
+            if ("books" in result.data.return)
+            {
+                // BARCODE, BOOKNAME, LENT_DATE, RETURN_DATE, STATS
+                // id, title, rentDate, retData,  stat
+                for (const entry of result.data.return.books)
+                {
+                    console.log(entry);
+                    const book = {'id': entry.BARCODE, 'title': entry.BOOKNAME, 'rentDate': entry.LENT_DATE, 'retDate': entry.RETURN_DATE, 'stat': entry.STATS}
+                    ret.push(book);
+                }
+//                ret = result.data.return.books;
+            }
+        }
+        else {
+            console.log("Check " + userId);
+            console.log(this.bookReady);
+            if (!this.bookReady)
+                return ret;
+    //        console.log(this.rent.length);
+            for (let i = 0 ; i < this.rent.length ; i++) {
+                const entry = this.rent[i];
+                if (userId !== undefined && entry.user_id !== userId)
+                    continue;
+    //            console.log(entry)
+                if (entry.state !== "1" && entry.state !== "3")
+                    continue;
+    //            console.log(entry);
+                const id = entry["book_id"];
+                const book = this.book[id];
+    //            console.log(book)
+                let retEntry = {}
+                retEntry["id"] = book._id
+                retEntry["title"] = book.title
+                retEntry["rentDate"] = entry.rent_date.split(" ")[0].replace("-","/",2).replace("-", "/")
+                retEntry["retDate"] = entry.return_date.split(" ")[0].replace("-","/",2).replace("-", "/")
+                retEntry["user"] = entry.user_id;
+                ret.push(retEntry)
+            }
         }
         return ret;
     }

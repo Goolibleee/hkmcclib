@@ -37,6 +37,7 @@
 		"returnDate" : "Return date",
 		"noEntry" : "No entry",
 		"notice" : "Notice",
+		"newMember" : "New Member",
 		"autoLogin" : "AutoLogin",
 		"userMode": "User Mode",
 		"adminMode": "Admin Mode",
@@ -56,7 +57,19 @@
 		"confirmRent" : "Rent this book?",
 		"confirmReturn" : "Return this book?",
 		"confirm": "Confirm",
-		"cancel": "Cancel"
+		"cancel": "Cancel",
+		"name": "Name",
+		"registeredDate": "Registered",
+		"phone": "Phone",
+		"email": "Email",
+		"address": "Address",
+		"notice": "Notice",
+		"level": "Level",
+		"save": "Save",
+		"confirmSave": "Save the modification?",
+		"kid": "Kid",
+		"adult": "Adult",
+		"admin": "Admin"
 	},
 	"kr": {
 		"titleLong": "천주교 산호세 한국 순교자 성당 도서관",
@@ -96,6 +109,7 @@
 		"returnDate" : "반납일",
 		"noEntry" : "내역 없음",
 		"notice" : "공지 사항",
+		"newMember" : "신규 회원",
 		"autoLogin" : "자동 로그인",
 		"userMode": "일반 모드",
 		"adminMode": "관리자 모드",
@@ -115,6 +129,18 @@
 		"confirmRent" : "대출하시겠습니까?",
 		"confirmReturn" : "반납하시겠습니까?",
 		"confirm": "확인",
-		"cancel": "취소"
+		"cancel": "취소",
+		"name": "이름",
+		"registeredDate": "등록일",
+		"phone": "전화번호",
+		"email": "이메일",
+		"address": "주소",
+		"notice": "비고",
+		"level": "등급",
+		"save": "저장",
+		"confirmSave": "저장하시겠습니까?",
+		"kid": "아동",
+		"adult": "성인",
+		"admin": "관리자"
 	}
 }

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { toastProp } from "../Util";
 import "./Page.css"
 import { useQuery, useLazyQuery } from "@apollo/client";
 import { SEARCH_PER_SCREEN } from "../Util";

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { toast } from "react-toastify";
-import { toastProp, loggingId, loadingId, getBookState, getUserState } from "../Util";
+import { toastProp, loggingId, loadingId, getUserState } from "../Util";
 import { useDebounce } from "use-debounce";
-import { Link } from 'react-router-dom'
 import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
@@ -33,6 +32,9 @@ function CheckOut(props) {
         }
 
         const interval = setInterval(async () => {
+//            console.log(props.doc.serverInfo);
+            if (!("localIp" in props.doc.serverInfo) || !("port" in props.doc.serverInfo))
+                return;
             const ipAddr = props.doc.serverInfo.localIp;
             const portNum = props.doc.serverInfo.port;
             if (ipAddr.length > 0 && portNum > 0)
@@ -150,29 +152,8 @@ function CheckOut(props) {
         () => {
             if (state !== State.LoggedIn)
                 setBarcode(userText);
-        }, [userText]
+        }, [state, userText]
     );
-
-    const showBook = (book, index) => {
-        const id = book["BARCODE"];
-        const state = getBookState(props.text, book["_STATE"].toString());
-        const rentDate = book["_RENT"];
-        const retDate = book["_RETURN"];
-        const bookName = book["BOOKNAME"];
-        const key = index.toString();
-        return (<React.Fragment key={key + "Fragment"}>
-                    <tr key={key} className="bookData">
-                        <td className="bookData"><Link to={"/search/"+id}>{id}</Link></td>
-                        <td className="bookData">{rentDate}</td>
-                        <td className="bookData">{retDate}</td>
-                    </tr>
-                    <tr key={key + "Title"} className="bookName">
-                        <td className="bookState">{state}</td>
-                        <td colSpan="2" className="bookName">{bookName}</td>
-                    </tr>
-                </React.Fragment>
-                );
-    }
 
     const updateUser = async (userText) => {
         const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/user?user=" + userText;
@@ -275,7 +256,7 @@ function CheckOut(props) {
             if (bookText.length > 0)
             {
                 const bookId = "HK" + bookText;
-                console.log("Search book " + bookId);
+                console.log("Search book1 " + bookId);
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
 //                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
@@ -284,21 +265,23 @@ function CheckOut(props) {
                 axios.get(url, obj).then( response => {
                         const book = response.data.return;
                         console.log(book)
-                        if ('BOOKNAME' in book)
+//                        if ('BOOKNAME' in book)
+                        if ('books' in book && 'BOOKNAME' in book.books)
                         {
-                            setScannedBook(book)
+                            console.log(book.books)
+                            setScannedBook(book.books)
                         }
                     }
                 );
             }
         },
-        [searchQuery]
+        [searchQuery, bookText, props.doc]
     );
 
     useEffect(
         () => {
             console.log("Barcode: " + barcode);
-            if (barcode.length == 0)
+            if (barcode.length === 0)
                 return;
             if (state !== State.LoggedIn)
             {
@@ -307,7 +290,7 @@ function CheckOut(props) {
             else
             {
                 const bookId = barcode;
-                console.log("Search book " + bookId);
+                console.log("Search book2 " + bookId);
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
 //                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
@@ -316,15 +299,15 @@ function CheckOut(props) {
                 axios.get(url, obj).then( response => {
                         const book = response.data.return;
                         console.log(book)
-                        if ('BOOKNAME' in book)
+                        if ('books' in book && 'BOOKNAME' in book.books)
                         {
-                            setScannedBook(book)
+                            setScannedBook(book.books)
                         }
                     }
                 );
             }
         },
-        [barcode]
+        [barcode, props.doc, state]
     );
 
     function confirmAction()

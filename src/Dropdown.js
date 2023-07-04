@@ -27,7 +27,7 @@ function DropDown(props) {
                menu.classList.add('is-show');
             }
 
-        }, [props.dropdown, dropdown, click]
+        }, [props.dropdown, dropdown, click, props.doc.logged]
     );
 
     const logOut = () =>
@@ -73,17 +73,26 @@ function DropDown(props) {
                         <Link className='menu-items' to="/checkOutStatus" onClick={() => setClick(false)}>
                             {props.text.checkOutStatus}
                         </Link>
-                        {props.doc.admin &&
-                            <>
-                            <hr className="hline"/>
-                            <Link className='menu-items' to="/userSearch" onClick={() => setClick(false)}>
-                                {props.text.userSearch}
-                            </Link>
-                            <Link className='menu-items' to="/rentHistory" onClick={() => setClick(false)}>
-                                {props.text.history}
-                            </Link>
-                            </>
-                        }
+                    </>
+                }
+                {props.doc.admin &&
+                    <>
+                    <hr className="hline"/>
+                    <Link className='menu-items' to="/userSearch" onClick={() => setClick(false)}>
+                        {props.text.userSearch}
+                    </Link>
+                    <Link className='menu-items' to="/rentHistory" onClick={() => setClick(false)}>
+                        {props.text.history}
+                    </Link>
+                    </>
+                }
+                {props.doc.serverAvailable && props.doc.admin &&
+                    <Link className='menu-items' to="/newMember" onClick={() => setClick(false)}>
+                        {props.text.newMember}
+                    </Link>
+                }
+                {!props.doc.serverAvailable && props.doc.logged &&
+                    <>
                         <hr className="hline"/>
                         <div className='menu-items' onClick={() => logOut()}>
                             {props.text.logOut}

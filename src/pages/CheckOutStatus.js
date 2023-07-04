@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Reader from "./Reader";
 import "./Page.css"
 import { toast } from "react-toastify";
 import { toastProp, loggingId } from "../Util";
@@ -64,10 +63,12 @@ function CheckOutStatus(props) {
         [props.doc.logged]
     );
 
-    useEffect(
-        () => {
-            console.log("User data updated ");
-            compare();
+    useEffect(() => {
+            async function func() {
+                console.log("User data updated ");
+                await compare();
+            }
+            func();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [userData]
@@ -123,7 +124,7 @@ function CheckOutStatus(props) {
             setState(State.LoggedIn);
             const userId = props.doc.userInfo['_id'];
             setUserId(userId);
-            setSearchResults(props.doc.getRent(userId));
+            setSearchResults(await props.doc.getRent(userId));
             await loadHistory();
         }
         else
@@ -203,10 +204,10 @@ function CheckOutStatus(props) {
         await loadUser();
         await loadHistory();
         console.log("Log In");
-        compare();
+        await compare();
     }
 
-    const compare = () => {
+    const compare = async () => {
         if (!userData || state === State.LoggedOut)
             return;
 
@@ -218,7 +219,7 @@ function CheckOutStatus(props) {
         {
             props.doc.logIn(userData.user);
 
-            setSearchResults(props.doc.getRent(userId));
+            setSearchResults(await props.doc.getRent(userId));
             setState(State.LoggedIn);
 
             prop.type = toast.TYPE.SUCCESS;
