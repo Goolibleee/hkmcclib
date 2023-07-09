@@ -82,9 +82,9 @@ function RentHistory(props) {
             const url = "https://" + props.doc.serverInfo.localIp + ":" +
                 props.doc.serverInfo.port + "/book";
             const obj = {"params": {"user": "*", "match":false}};
-            console.log(obj);
+//            console.log(obj);
             const response = await axios.get(url, obj);
-            console.log(response)
+//           console.log(response)
 //            if (!("books" in response.data.return))
 //                return results;
             const books = response.data.return.books;
@@ -135,7 +135,7 @@ function RentHistory(props) {
                 else
                     userName = ""
                 rent[index]["userName"] = userName;
-                console.log("UserName " + userId + " " + index.toString() + " " + userName);
+//                console.log("UserName " + userId + " " + index.toString() + " " + userName);
             }
             setRentList(rent);
         }

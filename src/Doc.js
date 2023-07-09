@@ -21,8 +21,8 @@ class Doc {
 
     async updateIpAddr()
     {
-        const response = await axios.get("https://ipv4.seeip.org/jsonip");
-//        "https://api.ipify.org/?format=json"
+//        const response = await axios.get("https://ipv4.seeip.org/jsonip");
+        const response = await axios.get("https://api.ipify.org/?format=json")
         console.log("Get IP Address");
         console.log(response.data);
         const ipAddr = response.data.ip;
@@ -35,6 +35,7 @@ class Doc {
     {
         if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
             return
+        return
         if (this.serverInfo.globalIp === this.ipAddr)
         {
             console.log("Server is accessible " + this.serverInfo.localIp);
@@ -115,7 +116,7 @@ class Doc {
             console.log("Cannot check rent");
             return;
         }
-        console.log(this.rent);
+//        console.log(this.rent);
         for (let i = 0 ; i < this.rent.length ; i++)
         {
             const state = this.rent[i].state;
@@ -126,8 +127,8 @@ class Doc {
 
             const userId = this.rent[i].user_id;
 //            console.log(this.rent[i]);
-            console.log(userId);
-            console.log(userId.length);
+//           console.log(userId);
+//           console.log(userId.length);
             if (userId && userId.length > 0 && userId in this.user)
                 this.user[userId]["rent"] += 1;
             else

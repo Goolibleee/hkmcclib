@@ -54,11 +54,24 @@ export const USER_QUERY = gql`
 
 export const HISTORY_QUERY = gql`
     query findLogs($user_id: String!){
-        rentLogs (query: {user_id: $user_id}) {
+        rentLogs (limit: 20000, query: {user_id: $user_id}) {
             _id
             book_id
             book_state
             timestamp
+            return_data
+            user_id
+        }
+    }`;
+
+export const HISTORY_PERIOD_QUERY = gql`
+    query findLogs ($fromTime: String!, $toTime: String!) {
+        rentLogs(limit: 20000, query: {AND: [{timestamp_gte: $fromTime}, {timestamp_lt: $toTime}]}) {
+            _id
+            book_id
+            book_state
+            timestamp
+            return_data
             user_id
         }
     }`;

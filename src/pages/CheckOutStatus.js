@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { toast } from "react-toastify";
-import { toastProp, loggingId } from "../Util";
+import { toastProp, loggingId, compareRent } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { Link } from 'react-router-dom'
 import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
@@ -31,10 +31,14 @@ function CheckOutStatus(props) {
 
     useEffect(function () {
         async function initialize() {
+            if (!props.doc.initialized)
+            {
+                console.log("Document is not ready");
+                window.location.href = "/";
+                return;
+            }
             if (props.doc.isOpen())
                 updateDoc();
-            else
-                props.doc.setCallback(updateDoc);
             console.log("=======================================");
             console.log("CheckOutStatus initialize");
 
@@ -80,10 +84,11 @@ function CheckOutStatus(props) {
             if (!historyData || !props.doc.bookReady || !props.doc.rentReady)
                 return;
             console.log("History updated ");
-//            console.log(historyData);
-            for (let i = 0 ; i < historyData["rentLogs"].length ; i++)
+            console.log(historyData);
+/*
+            for (let i = 0 ; i < historyData.rentLogs.length ; i++)
             {
-                const entry = historyData["rentLogs"][i];
+                const entry = historyData.rentLogs[i];
                 if (entry["book_state"] !== "0" && entry["book_state"] !== "1")
                     continue;
                 const id = entry["book_id"];
@@ -109,6 +114,23 @@ function CheckOutStatus(props) {
                 }
             }
 //            console.log(hist);
+*/
+            let hist = [];
+            for (let i = 0 ; i < historyData.rentLogs.length ; i++)
+            {
+                const entry = historyData.rentLogs[i];
+                if (entry.book_state !== "1")
+                    continue;
+                if (! "return_data" in entry || ! entry.return_data)
+                    continue;
+                const id = entry["book_id"];
+                const title = props.doc.book[id]["title"];
+                const date = entry["timestamp"].split(" ")[0].replace("-", "/", 2).replace("-", "/")
+                const retDate = entry.return_data;
+                hist.push({"id": id, "title": title, "rentDate": date, "retDate": retDate});
+
+            }
+            hist.sort(compareRent);
             console.log("Set history");
             setHistory(hist);
         },

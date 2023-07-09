@@ -21,6 +21,7 @@ function ListView(props) {
     useEffect(function () {
 //        console.log("Set Item List");
         setItemList(props.list);
+        setPageNum(0);
     }, [props.list]);
 
     useEffect(function () {

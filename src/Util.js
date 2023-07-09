@@ -58,6 +58,15 @@ export const getBookState = function(text, state) {
     }
 }
 
+export const compareRent = function(a1, a2)
+{
+    if (a1.rentDate > a2.rentDate)
+        return true;
+    else if (a1.rentDate < a2.rentDate)
+        return false;
+    return a1.title > a2.title;
+}
+
 export const toUtf8 = function(text) {
     return unescape(encodeURIComponent(text));
 };
