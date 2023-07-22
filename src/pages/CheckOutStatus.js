@@ -3,7 +3,7 @@ import "./Page.css"
 import { toast } from "react-toastify";
 import { toastProp, loggingId, compareRent } from "../Util";
 import { useLazyQuery } from "@apollo/client";
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
 import ListView from "../ListView";
 
@@ -32,11 +32,8 @@ function CheckOutStatus(props) {
     useEffect(function () {
         async function initialize() {
             if (!props.doc.initialized)
-            {
-                console.log("Document is not ready");
-                window.location.href = "/";
                 return;
-            }
+
             if (props.doc.isOpen())
                 updateDoc();
             console.log("=======================================");
@@ -80,48 +77,17 @@ function CheckOutStatus(props) {
 
     useEffect(
         () => {
-            let rawHist = [];
             if (!historyData || !props.doc.bookReady || !props.doc.rentReady)
                 return;
             console.log("History updated ");
             console.log(historyData);
-/*
-            for (let i = 0 ; i < historyData.rentLogs.length ; i++)
-            {
-                const entry = historyData.rentLogs[i];
-                if (entry["book_state"] !== "0" && entry["book_state"] !== "1")
-                    continue;
-                const id = entry["book_id"];
-                const date = entry["timestamp"].split(" ")[0].replace("-", "/", 2).replace("-", "/")
-                rawHist.push({"id": id, "title": props.doc.book[id]["title"], "date": date, "state": entry["book_state"]});
-            }
-            rawHist.sort((s1, s2) => { return s1["date"] > s2["date"]; });
-//            console.log(rawHist);
-
-            let hist = [];
-            for (let i = 0 ; i < rawHist.length - 1 ; i++)
-            {
-                if (rawHist[i]["state"] !== "1")
-                    continue;
-                const entry  = rawHist[i];
-                const id = entry["id"];
-                for (let j = i+1 ; j < rawHist.length ; j++)
-                {
-                    if (rawHist[j]["state"] !== "0" || id !== rawHist[j]["id"])
-                        continue;
-                    hist.push({"id": entry["id"], "title": entry["title"], "rentDate": entry["date"], "retDate": rawHist[j]["date"]});
-                    break;
-                }
-            }
-//            console.log(hist);
-*/
             let hist = [];
             for (let i = 0 ; i < historyData.rentLogs.length ; i++)
             {
                 const entry = historyData.rentLogs[i];
                 if (entry.book_state !== "1")
                     continue;
-                if (! "return_data" in entry || ! entry.return_data)
+                if (! ("return_data" in entry) || ! entry.return_data)
                     continue;
                 const id = entry["book_id"];
                 const title = props.doc.book[id]["title"];
@@ -200,13 +166,13 @@ function CheckOutStatus(props) {
         setAutoLogin(!autoLogin);
     }
 
-    const showEntries = (result) => {
+    const showEntries = (result, retText) => {
         return (<div>
                     <table><tbody>
                     <tr key="ID">
                         <th id="id">{props.text.id}</th>
                         <th id="rentDate">{props.text.rentDate}</th>
-                        <th id="returnDate">{props.text.returnDate}</th>
+                        <th id="returnDate">{retText}</th>
                     </tr>
                     {
                         result.map((rent, index) => {
@@ -268,6 +234,9 @@ function CheckOutStatus(props) {
         }
     }
 
+    if (!props.doc.initialized)
+        return <Navigate to="/" />;
+
     return (
         <div id="checkOut">
             <div id="title">
@@ -300,11 +269,11 @@ function CheckOutStatus(props) {
             </div>
             <div id="checkOutResult" hidden={!(state === State.LoggedIn)}>
                 <div>
-                    { showEntries(searchResults) }
+                    { showEntries(searchResults, props.text.dueDate) }
                 </div>
 
                 <div id="name">{props.text.history}</div>
-                <ListView list={history} showCallback={(entries) => { return showEntries(entries); }}/>
+                <ListView list={history} showCallback={(entries) => { return showEntries(entries, props.text.returnDate); }}/>
             </div>
         </div>
     );

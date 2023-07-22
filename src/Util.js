@@ -40,21 +40,37 @@ export const getUserState = function(text, state) {
 }
 
 export const getBookState = function(text, state) {
-    if (state === "0")
+    console.log("Book state " + state);
+    switch (state)
     {
-        return text.available;
-    }
-    else if (state === "1")
-    {
-        return text.checkedOut;
-    }
-    else if (state === "3")
-    {
-        return text.overDue;
-    }
-    else
-    {
-        return text.notAvailable;
+        case "0":
+        case 0:
+            return text.available;
+        case "1":
+        case 1:
+            return text.checkedOut;
+        case "2":
+        case 2:
+            return text.reserved;
+        case "3":
+        case 3:
+            return text.overDue;
+        case "4":
+        case 4:
+            return text.lost;
+        case "5":
+        case 5:
+            return text.damaged;
+        case "6":
+        case 6:
+            return text.given;
+        case "7":
+        case 7:
+        default:
+            return text.notAvailable;
+        case "8":
+        case 8:
+            return text.deleted;
     }
 }
 

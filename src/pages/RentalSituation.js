@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { getUserState } from "../Util";
 import { useLazyQuery } from "@apollo/client";
-import { getBookState, toUtf8 } from "../Util";
-import { Link } from 'react-router-dom'
+import { getBookState } from "../Util";
+import { Link, Navigate } from 'react-router-dom'
 import {USERS_QUERY} from "../api/query.js";
 import ListView from "../ListView";
 import axios from "axios";
@@ -16,12 +16,6 @@ function RentHistory(props) {
 
     useEffect(function () {
         async function initialize() {
-            if (!props.doc.initialized)
-            {
-                console.log("Document is not ready");
-                window.location.href = "/";
-                return;
-            }
             console.log("=======================================");
             console.log("RentHistory initialize");
 
@@ -65,7 +59,9 @@ function RentHistory(props) {
     useEffect(
         () => {
             updateDoc();
-        }, [userList]
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [userList]
     );
 
     function compare(a1, a2)
@@ -197,6 +193,9 @@ function RentHistory(props) {
                 </div>);
     }
 
+    if (!props.doc.initialized)
+        return <Navigate to="/" />;
+
     return (
         <div id="situation">
             <div id="title">
@@ -205,7 +204,7 @@ function RentHistory(props) {
                 </h2>
             </div>
             <div id="checkOutResult">
-                <ListView list={rentList} showCallback={(entries) => { return showEntries(entries); }}/>
+                <ListView keyValue="" list={rentList} showCallback={(entries) => { return showEntries(entries); }}/>
 
             </div>
         </div>

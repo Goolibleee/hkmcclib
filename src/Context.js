@@ -70,7 +70,7 @@ class Context {
             const days=2;
             date.setTime(date.getTime()+(days*24*60*60*1000));
             const expireDate = date.toGMTString();
-            document.cookie = "password=" +  passwordTyped + "; expires=" + expireDate + ";";
+            document.cookie = "password=" +  passwordTyped + "; expires=" + expireDate + " ; SameSite=Lax ;" ;
         }
         return matched
     }

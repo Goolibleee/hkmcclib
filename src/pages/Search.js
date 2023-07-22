@@ -10,13 +10,20 @@ let initialized = false;
 
 function Search(props) {
     const [inputText, setInputText] = useState("");
-    const [searchQuery] = useDebounce(inputText, 50);
+    const [searchQuery] = useDebounce(inputText, 300);
     const [searchResults, setSearchResults] = useState([]);
     const [selectedId, setSelectedId] = useState(0);
     const selectedRef = useRef("0");
 
     const [bookList, setBookList] = useState([]);
     const [rentList, setRentList] = useState([]);
+
+    const [bookState, setBookState] = useState(0);
+    const bookStateRef = useRef(0);
+    const [needConfirm, setNeedConfirm] = useState(false);
+    const needConfirmRef = useRef(false);
+
+    const [queryRequest, toggleQueryRequest] = useState(false);
 
     const { id } = useParams();
 
@@ -58,6 +65,8 @@ function Search(props) {
                     const url = "https://" + props.doc.serverInfo.localIp + ":" +
                         props.doc.serverInfo.port + "/book";
                     const obj = {"params": {"book": btoa(toUtf8(text)), "match":false}};
+                    console.log("=======================");
+                    console.log("Request book list");
                     console.log(obj);
                     const response = await axios.get(url, obj);
                     console.log(response)
@@ -85,7 +94,8 @@ function Search(props) {
                             totalName: book.TOTAL_NAME,
                             claim_num: book.CLAMENUM,
                             publish: book.PUBLISH,
-                            claim: book.CLAIM
+                            claim: book.CLAIM,
+                            state: book._STATE
                         };
                         results.push(resultObject);
                     }
@@ -125,7 +135,8 @@ function Search(props) {
                                 totalName: row.totalName,
                                 claim_num: row.claim_num,
                                 publish: row.publish,
-                                claim: row.claim
+                                claim: row.claim,
+                                state: parseInt(state)
                             };
                             results.push(resultObject);
                         }
@@ -135,6 +146,7 @@ function Search(props) {
                 return results;
             }
             async function query() {
+                console.log("Refresh");
                 if (searchQuery) {
                     let sr = await findBooks(searchQuery);
                     if (sr.length > 0)
@@ -149,7 +161,7 @@ function Search(props) {
             }
             query();
         },
-        [searchQuery, bookList, rentList, props]
+        [searchQuery, bookList, rentList, props, queryRequest]
     );
 
     async function updateDoc()
@@ -194,9 +206,58 @@ function Search(props) {
         }
     }
 
+    function setState(state)
+    {
+        console.log("Set state " + state.toString());
+        needConfirmRef.current = true;
+        setNeedConfirm(true);
+        setBookState(state);
+        bookStateRef.current = state;
+        console.log(selectedId.toString() + needConfirmRef.current);
+    }
+
+    async function confirmAction()
+    {
+        console.log("Confirmed");
+        needConfirmRef.current = false;
+        setNeedConfirm(false);
+
+        const ipAddr = props.doc.serverInfo.localIp;
+        const portNum = props.doc.serverInfo.port;
+        if (ipAddr.length === 0 || portNum <= 0)
+            return;
+
+        const url = "https://" + ipAddr + ":" +
+            portNum + "/book";
+        var obj = {};
+        obj["book"] = selectedRef.current;
+        obj["state"] = bookStateRef.current;
+        console.log("=======================");
+        console.log("Change book state");
+        console.log(obj);
+        await axios.post(url, obj).then( response => {
+            console.log(response);
+        });
+
+        toggleQueryRequest(!queryRequest);
+    }
+
+    function cancelAction()
+    {
+        console.log("Cancelled");
+        needConfirmRef.current = false;
+        setNeedConfirm(false);
+    }
+
     const showEntry = (result) => {
         const hidden = (result.code !== selectedRef.current);
         const entryId = (hidden) ? "searchResult" : "selectedSearchResult";
+        const flags = [false, false, false, false, false, false, false, false, false, false]
+        flags[result.state] = true;
+        if (result.state === 1 || result.state === 2 || result.state === 3)
+            flags[0] = true;
+        if (!hidden)
+            console.log(flags)
         return (
             <div key={result.code}>
             <div id={entryId} onClick={async () => await selectId(result.code)}>
@@ -223,6 +284,19 @@ function Search(props) {
                     {result.retDate.length > 0 && <td>{result.retDate}</td> }
                 </tr>
                 </tbody></table>
+                <div hidden={!props.doc.serverAvailable || !props.doc.admin}>
+                    <button className="bookStates" id = "0" disabled={flags[0]} onClick={() => setState(0)}> {props.text.available} </button>
+                    <button className="bookStates" id = "4" disabled={flags[4]} onClick={() => setState(4)}> {props.text.lost} </button>
+                    <button className="bookStates" id = "5" disabled={flags[5]} onClick={() => setState(5)}> {props.text.damaged} </button>
+                    <button className="bookStates" id = "6" disabled={flags[6]} onClick={() => setState(6)}> {props.text.given} </button>
+                    <button className="bookStates" id = "7" disabled={flags[7]} onClick={() => setState(7)}> {props.text.notAvailable} </button>
+                    <button className="bookStates" id = "8" disabled={flags[8]} onClick={() => setState(8)}> {props.text.deleted} </button>
+                </div>
+                <div id="checkRent" hidden={!needConfirmRef.current}>
+                    <div id="bookName"> {getBookState(props.text, bookStateRef.current)} </div>
+                    <button id="confirm" onClick={() => confirmAction()}> {props.text.confirm} </button>
+                    <button id="cancel" onClick={() => cancelAction()}> {props.text.cancel} </button>
+                </div>
             </div>
             }
             </div>
@@ -231,6 +305,7 @@ function Search(props) {
 
     function showEntries(results)
     {
+        console.log("Redraw " + needConfirmRef.current);
         return results.map((result) => showEntry(result))
     }
 
@@ -247,7 +322,7 @@ function Search(props) {
                         setInputText(event.target.value);
                     }} />
             </div>
-            <ListView list={searchResults} showCallback={(entries) => { return showEntries(entries); }}/>
+            <ListView keyValue={searchQuery} list={searchResults} detail={selectedId + needConfirm} showCallback={(entries, detail) => { return showEntries(entries); }}/>
         </div>
     );
 }

@@ -17,7 +17,7 @@
 		"checkOut": "Check Out",
 		"return": "Return",
 		"history": "Rent History",
-		"situation": "Rent Situation",
+		"situation": "Rent State",
 		"loading": "Loading DB",
 		"succeededToOpen" : "Succeeded to load",
 		"searchUser" : "Enter name or ID",

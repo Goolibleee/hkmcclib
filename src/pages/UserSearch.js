@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
 import { toastProp, MAX_SEARCH_ENTRY, getUserState, toUtf8 } from "../Util";
 import { useLazyQuery } from "@apollo/client";
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import {USERS_QUERY} from "../api/query.js";
 import ListView from "../ListView";
 import UserInfo from "../UserInfo";
@@ -14,13 +14,13 @@ import axios from "axios";
 
 function CheckOut(props) {
     const [userText, setUserText] = useState("");
-    const [searchQuery] = useDebounce(userText, 50);
+    const [searchQuery] = useDebounce(userText, 300);
     const [queryRequest, toggleQueryRequest] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [initialized, setInitialized] = useState(false);
     const [loadUser, {loading: userLoading, data: userListData, error: userError }] = useLazyQuery(USERS_QUERY);
     const [userList, setUserList] = useState({});
-    const [selectedId, setSelectedId] = useState(0);
+//    const [selectedId, setSelectedId] = useState(0);
     const selectedRef = useRef("0");
     const { id } = useParams();
     const [rentList, setRentList] = useState([]);
@@ -29,8 +29,6 @@ function CheckOut(props) {
         async function initialize() {
             if (!props.doc.initialized)
             {
-                console.log("Document is not ready");
-                window.location.href = "/";
                 return;
             }
             if (props.doc.isOpen())
@@ -144,21 +142,22 @@ function CheckOut(props) {
     }
 
     const selectId = async (id) => {
+        const rent = await props.doc.getRent(id);
+        console.log(rent);
         if (selectedRef.current === -1 || selectedRef.current !== id)
         {
             console.log("Select " + id);
-            setSelectedId(id);
+//            setSelectedId(id);
             selectedRef.current = id;
-            const rent = await props.doc.getRent(id);
             console.log("Set Rent List");
             console.log(rent)
             setRentList(rent);
 //            rentList = rent;
         }
-        else
+        else if (searchResults.length > 1)
         {
             console.log("Deselect " + id);
-            setSelectedId(-1);
+//            setSelectedId(-1);
             selectedRef.current = -1;
             setRentList([]);
 //            rentList = [];
@@ -199,7 +198,6 @@ function CheckOut(props) {
     }
 
     const showEntries = (user, detail) => {
-        const id = user.id
         console.log("Detail");
         console.log(user);
         return (<>
@@ -291,8 +289,12 @@ function CheckOut(props) {
             }
             query();
         },
-        [searchQuery, props, userList, queryRequest]
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+       [searchQuery, props, userList, queryRequest, userText]
     );
+
+    if (!props.doc.initialized)
+        return <Navigate to="/" />;
 
     return (
         <div id="checkOut">
@@ -309,7 +311,7 @@ function CheckOut(props) {
                         setUserText(event.target.value);
                     }} />
                 <div>
-                    <ListView list={searchResults} detail={rentList} showCallback={(entries, detail) => { return showUsers(entries, detail); }}/>
+                    <ListView keyValue={searchQuery} list={searchResults} detail={rentList} showCallback={(entries, detail) => { return showUsers(entries, detail); }}/>
                 </div>
             </div>
         </div>

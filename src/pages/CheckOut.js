@@ -16,7 +16,7 @@ const State = {
 function CheckOut(props) {
     const [userText, setUserText] = useState("");
     const [bookText, setBookText] = useState("");
-    const [searchQuery] = useDebounce(bookText, 50);
+    const [searchQuery] = useDebounce(bookText, 300);
     const [userId, setUserId] = useState("");
     const [state, setState] = useState(State.LoggedOut);
     const [userData, setUserData] = useState({});

@@ -34,8 +34,7 @@ class Doc {
     checkServerIp()
     {
         if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
-            return
-        return
+            return;
         if (this.serverInfo.globalIp === this.ipAddr)
         {
             console.log("Server is accessible " + this.serverInfo.localIp);

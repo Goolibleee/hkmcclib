@@ -8,7 +8,7 @@ import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
 function Return(props) {
     const [bookText, setBookText] = useState("");
-    const [searchQuery] = useDebounce(bookText, 50);
+    const [searchQuery] = useDebounce(bookText, 300);
 //    const [initialized, setInitialized] = useState(false);
 //    const [userId, setUserId] = useState("");
 //    const [state, setState] = useState(State.LoggedOut);

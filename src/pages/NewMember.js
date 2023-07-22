@@ -1,37 +1,24 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { toast } from "react-toastify";
-import { useDebounce } from "use-debounce";
-import { toastProp, MAX_SEARCH_ENTRY, getUserState, toUtf8 } from "../Util";
-import { useLazyQuery } from "@apollo/client";
-import { Link, useParams } from 'react-router-dom'
-import {USERS_QUERY} from "../api/query.js";
-import ListView from "../ListView";
+import { toastProp } from "../Util";
+//import { useLazyQuery } from "@apollo/client";
+import { Navigate } from 'react-router-dom'
+//import {USERS_QUERY} from "../api/query.js";
 import UserInfo from "../UserInfo";
-import axios from "axios";
-
-//var rentList = [];
 
 function NewMember(props) {
-    const [userText, setUserText] = useState("");
+//    const [userText, setUserText] = useState("");
     const [userInfo, setUserInfo] = useState({});
-    const [searchQuery] = useDebounce(userText, 50);
     const [queryRequest, toggleQueryRequest] = useState(false);
-    const [searchResults, setSearchResults] = useState([]);
-    const [initialized, setInitialized] = useState(false);
-    const [loadUser, {loading: userLoading, data: userListData, error: userError }] = useLazyQuery(USERS_QUERY);
-    const [userList, setUserList] = useState({});
-    const [selectedId, setSelectedId] = useState(0);
-    const selectedRef = useRef("0");
-    const { id } = useParams();
-    const [rentList, setRentList] = useState([]);
+//    const [loadUser, {loading: userLoading, data: userListData, error: userError }] = useLazyQuery(USERS_QUERY);
+//    const [userList, setUserList] = useState({});
+//    const { id } = useParams();
 
     useEffect(function () {
         async function initialize() {
             if (!props.doc.initialized || !props.doc.serverAvailable)
             {
-                console.log("Document is not ready");
-                window.location.href = "/";
                 return;
             }
             console.log("=======================================");
@@ -43,6 +30,7 @@ function NewMember(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+/*
     useEffect(
         () => {
             console.log("Updated id: " + id);
@@ -56,6 +44,7 @@ function NewMember(props) {
             }
         }, [id]
     );
+*/
 
     function prepareNewMember()
     {
@@ -70,6 +59,7 @@ function NewMember(props) {
         setUserInfo(info);
     }
 
+/*
     useEffect(
         () => {
             console.log("User list loaded");
@@ -93,6 +83,7 @@ function NewMember(props) {
         },
         [userListData, userLoading, userError, props]
     );
+*/
 
     function refresh(response)
     {
@@ -116,6 +107,8 @@ function NewMember(props) {
         prop.autoClose = 3000;
         toast.info(text, prop);
     }
+    if (!props.doc.initialized || !props.doc.serverAvailable)
+        return <Navigate to="/" />;
 
     return (
         <div id="checkOut">
