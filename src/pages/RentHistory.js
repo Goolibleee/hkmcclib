@@ -5,7 +5,8 @@ import { getUserState } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { compareRent } from "../Util";
 import { Link, Navigate } from 'react-router-dom'
-import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query.js";
+//import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query.js";
+import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 import axios from "axios";
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
@@ -83,11 +84,13 @@ function RentHistory(props) {
             console.log(userLoading);
             if (userListData)
             {
+//                const users = userListData.users;
+                const users = userListData.user_tests;
                 var list = [];
                 console.log("User list available");
-                for (let i = 0; i < userListData.users.length; i++)
+                for (let i = 0; i < users.length; i++)
                 {
-                    const user = userListData.users[i];
+                    const user = users[i];
                     const entry = {"id": user._id, "name": user.name, "level": user.level, "state": getUserState(props.text, user.state)};
                     list.push(entry)
                 }
@@ -105,16 +108,17 @@ function RentHistory(props) {
             if (!historyData)
                 return
 
-//            console.log(historyData.rentLogs)
+//            console.log(historyData.rentLog_tests)
 
-            const books = historyData.rentLogs;
+//            const books = historyData.rentLogs;
+            const books = historyData.rentLog_tests;
             let results = [];
             let retDate = "";
             for (let i = 0 ; i < books.length ; i++)
             {
                 const book = books[i];
                 const state = book.book_state;
-                if (state !== "1")
+                if (state !== "1" && state !== 1)
                     continue
                 if (!book.return_data || book.return_data.length === 0)
                     continue
@@ -355,6 +359,15 @@ function RentHistory(props) {
     {
         var year = yearValue;
         var month = monthValue;
+        if (typeof year === "string")
+            year = parseInt(year)
+        if (typeof month === "string")
+            month = parseInt(month)
+
+        console.log(year);
+        console.log(month);
+        console.log(typeof year);
+        console.log(typeof month);
         if (month > 1)
         {
             month -= 1
@@ -374,6 +387,14 @@ function RentHistory(props) {
     {
         var year = yearValue;
         var month = monthValue;
+        if (typeof year === "string")
+            year = parseInt(year)
+        if (typeof month === "string")
+            month = parseInt(month)
+        console.log(year);
+        console.log(month);
+        console.log(typeof year);
+        console.log(typeof month);
         if (month < 12)
         {
             month += 1

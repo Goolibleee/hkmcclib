@@ -40,7 +40,6 @@ export const getUserState = function(text, state) {
 }
 
 export const getBookState = function(text, state) {
-    console.log("Book state " + state);
     switch (state)
     {
         case "0":

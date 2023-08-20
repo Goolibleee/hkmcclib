@@ -73,13 +73,13 @@ function Search(props) {
                     if (!("books" in response.data.return))
                         return results;
                     const books = response.data.return.books;
-                    let retDate = "";
                     for (let i = 0 ; i < books.length ; i++)
                     {
                         const book = books[i];
                         const resultString = `${book.BOOKNAME} ${book.CLAIMNUM}`;
                         const state = book._STATE;
-                        if (state === 1 || state === 3)
+                        let retDate = "";
+                        if (state === 1 || state === 3 || state === "1" || state === "3")
                         {
                             retDate = props.text.returnDate + " " + book._RETURN;
                         }

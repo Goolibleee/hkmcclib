@@ -5,6 +5,7 @@ import { toastProp, loadingId } from "../Util";
 import { useDebounce } from "use-debounce";
 import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import ListView from "../ListView";
 
 function Return(props) {
     const [bookText, setBookText] = useState("");
@@ -20,6 +21,7 @@ function Return(props) {
     const [needConfirm, setNeedConfirm] = useState(false);
     const [notifyRequest, setNotifyRequest] = useState({});
     const [barcode, setBarcode] = useState("");
+    const [returned, setReturned] = useState([]);
 
     useEffect(function () {
         async function initialize() {
@@ -40,8 +42,11 @@ function Return(props) {
                 axios.get(url).then( response => {
                         const book = response.data.scan;
                         if (book) {
-                            console.log(barcode + " -> " + book)
-                            setBarcode(book)
+                            console.log(book.search("HK"))
+                            if (book.search("HK") === 0) {
+                                console.log(barcode + " -> " + book)
+                                setBarcode(book)
+                            }
                         }
                     }
                 );
@@ -120,7 +125,7 @@ function Return(props) {
                 );
             }
         },
-        [searchQuery, bookText, props.doc]
+        [searchQuery, props.doc]
     );
 
     useEffect(
@@ -265,6 +270,29 @@ function Return(props) {
         [notifyRequest]
     );
 
+    useEffect(
+        () => {
+            console.log("Returned updated");
+            console.log(returned);
+            if (!("localIp" in props.doc.serverInfo) || !("port" in props.doc.serverInfo))
+                return;
+            console.log("Update return list");
+            const bookId = "HK" + bookText;
+            console.log("Search book1 " + bookId);
+            const url = "https://" + props.doc.serverInfo.localIp + ":" +
+                props.doc.serverInfo.port + "/book";
+//                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
+            const obj = {"params": {"books": returned}};
+            console.log(obj);
+            axios.get(url, obj).then( response => {
+//                    const book = response.data.return;
+//                    console.log(book)
+                }
+            );
+        },
+        [returned]
+    );
+
     function confirmAction()
     {
         console.log("Confirmed");
@@ -295,6 +323,9 @@ function Return(props) {
                 setNotifyRequest({"id": loadingId,
                                   "text": props.text.returnSucceed,
                                   "type": toast.TYPE.SUCCESS})
+                returned.push({"id": scannedBook.BARCODE, "name": scannedBook.BOOKNAME})
+                console.log(returned)
+                setReturned(returned)
             }
             else
             {
@@ -321,6 +352,22 @@ function Return(props) {
         setBarcode("")
     }
 
+    function showEntry(index, rent)
+    {
+        return (<div id="bookEntry" key={rent.id}>
+                    <div id="bookItem"> {rent.id} </div>
+                    <div id="bookItem"> {rent.name} </div>
+                </div>);
+    }
+
+    function showBook(books)
+    {
+        return (<div id="bookList">
+                    {books.map((rent, index) => { return showEntry(index, rent) })}
+                </div>);
+    }
+
+
     return (
         <div id="checkOut">
             <div id="title">
@@ -337,7 +384,7 @@ function Return(props) {
                     </span>
                 </label>
                 <label id="manualInput">
-                    <div id="hkPrefix">
+                    <div id="hkPrefix" hidden>
                         HK
                     </div>
                     <input inputMode="numeric" pattern="\d*" type="text" id="searchInput"
@@ -349,10 +396,14 @@ function Return(props) {
                 </div>
                 <div id="checkReturn" hidden={!needConfirm}>
                     <div id="bookName"> {props.text.confirmReturn} </div>
-                    <div id="bookName"> {scannedBook.AUTHOR + ":" + scannedBook.BOOKNAME} </div>
+                    <div id="bookName"> {scannedBook.AUTHOR + ":"} </div>
+                    <div id="bookName"> {scannedBook.BOOKNAME} </div>
                     <button id="confirm" onClick={() => confirmAction()}> {props.text.confirm} </button>
                     <button id="cancel" onClick={() => cancelAction()}> {props.text.cancel} </button>
                 </div>
+                {returned.length > 0 &&
+                    <ListView list={returned} showCallback={(entry) => {return showBook(entry)}}/>
+                }
             </div>
         </div>
     );

@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 import { toastProp, loggingId, compareRent } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { Link, Navigate } from 'react-router-dom'
-import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
+//import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
+import {USER_QUERY, HISTORY_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 
 const State = {
@@ -80,17 +81,18 @@ function CheckOutStatus(props) {
             if (!historyData || !props.doc.bookReady || !props.doc.rentReady)
                 return;
             console.log("History updated ");
-            console.log(historyData);
             let hist = [];
-            for (let i = 0 ; i < historyData.rentLogs.length ; i++)
+//            const rentLogs = historyData.rentLogs;
+            const rentLogs = historyData.rentLog_tests;
+            for (let i = 0 ; i < rentLogs.length ; i++)
             {
-                const entry = historyData.rentLogs[i];
-                if (entry.book_state !== "1")
+                const entry = rentLogs[i];
+                if (entry.book_state !== "1" && entry.book_state !== 1)
                     continue;
                 if (! ("return_data" in entry) || ! entry.return_data)
                     continue;
                 const id = entry["book_id"];
-                const title = props.doc.book[id]["title"];
+                const title = (id in props.doc.book) ? props.doc.book[id]["title"] : "N/A";
                 const date = entry["timestamp"].split(" ")[0].replace("-", "/", 2).replace("-", "/")
                 const retDate = entry.return_data;
                 hist.push({"id": id, "title": title, "rentDate": date, "retDate": retDate});
@@ -161,7 +163,7 @@ function CheckOutStatus(props) {
     const toggleAutoLogin = () => {
         console.log("Toggle autoLogin");
         const cookieString = "autoLogin=" + (autoLogin ? "false":"true") + "; expires=" + expireDate + ";";
-        console.log(cookieString);
+//        console.log(cookieString);
         document.cookie = cookieString;
         setAutoLogin(!autoLogin);
     }
@@ -203,9 +205,9 @@ function CheckOutStatus(props) {
         const prop = toastProp;
 
         let text;
-        if (props.context.checkLogIn(userData, passwordText))
+        if (props.context.checkLogIn(userData.user_test, passwordText))
         {
-            props.doc.logIn(userData.user);
+            props.doc.logIn(userData.user_test);
 
             setSearchResults(await props.doc.getRent(userId));
             setState(State.LoggedIn);

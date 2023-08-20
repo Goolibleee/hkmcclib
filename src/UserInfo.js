@@ -11,11 +11,11 @@ function UserInfo(props) {
     useEffect(function() {
         console.log("User Info");
         console.log(props.info);
-        document.getElementById('userName').value = props.info.USER_NAME;
-        document.getElementById('phone').value = props.info.PHONE_NUMBER;
-        document.getElementById('email').value = props.info.EMAIL;
-        document.getElementById('address').value = props.info.ADDRESS;
-        document.getElementById('notice_').value = props.info.NOTICE;
+        document.getElementById('userName').value = props.info.USER_NAME ? props.info.USER_NAME : "";
+        document.getElementById('phone').value = props.info.PHONE_NUMBER ? props.info.PHONE_NUMBER : "";
+        document.getElementById('email').value = props.info.EMAIL ? props.info.EMAIL : "";
+        document.getElementById('address').value = props.info.ADDRESS ? props.info.ADDRESS : "";
+        document.getElementById('notice_').value = props.info.NOTICE ? props.info.NOTICE : "";
         document.getElementById('user_level').value = props.info.USER_LEVEL;
         setUserInfo({"USER_CODE": props.info.USER_CODE});
         setDisabled(true);
@@ -71,6 +71,7 @@ function UserInfo(props) {
             portNum + "/user";
 
         var obj = {};
+        console.log(userInfo)
         for (const key in userInfo)
         {
             obj[key] = btoa(toUtf8(userInfo[key]));

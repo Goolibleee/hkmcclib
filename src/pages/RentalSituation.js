@@ -4,7 +4,8 @@ import { getUserState } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { getBookState } from "../Util";
 import { Link, Navigate } from 'react-router-dom'
-import {USERS_QUERY} from "../api/query.js";
+//import {USERS_QUERY} from "../api/query.js";
+import {USERS_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 import axios from "axios";
 
@@ -41,11 +42,13 @@ function RentHistory(props) {
             console.log(userLoading);
             if (userListData)
             {
+//                const users = userListData.users;
+                const users = userListData.user_tests;
                 var list = [];
                 console.log("User list available");
-                for (let i = 0; i < userListData.users.length; i++)
+                for (let i = 0; i < users.length; i++)
                 {
-                    const user = userListData.users[i];
+                    const user = users[i];
                     const entry = {"id": user._id, "name": user.name, "level": user.level, "state": getUserState(props.text, user.state)};
                     list.push(entry)
                 }
@@ -90,7 +93,7 @@ function RentHistory(props) {
                 const book = books[i];
                 const resultString = `${book.BOOKNAME} ${book.CLAIMNUM}`;
                 const state = book._STATE;
-                if (state === 1 || state === 3)
+                if (state === 1 || state === 3 || state === "1" || state === "3")
                 {
                     retDate = book.RETURN_DATE;
                 }

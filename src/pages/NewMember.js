@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { toast } from "react-toastify";
 import { toastProp } from "../Util";
-//import { useLazyQuery } from "@apollo/client";
 import { Navigate } from 'react-router-dom'
-//import {USERS_QUERY} from "../api/query.js";
 import UserInfo from "../UserInfo";
 
 function NewMember(props) {
@@ -96,13 +94,13 @@ function NewMember(props) {
         if (response.data.return === "OK")
         {
             prop.type = toast.TYPE.SUCCESS;
-            text = props.text.logInSucceed;
+            text = props.text.regSuccess;
             prepareNewMember()
         }
         else
         {
             prop.type = toast.TYPE.ERROR;
-            text = props.text.logInFail;
+            text = props.text.regFail;
         }
         prop.autoClose = 3000;
         toast.info(text, prop);

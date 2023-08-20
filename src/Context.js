@@ -19,16 +19,15 @@ class Context {
                 acc[decodeURIComponent(key)] = decodeURIComponent(value);
                 return acc;
             }, {});
-        console.log(this.cookie);
     }
 
-    checkLogIn(userData, passwordText) {
+    checkLogIn(user, passwordText) {
         var matched = false;
         var passwordTyped;
-        if (userData.user && passwordText.length > 0) {
+        if (user && passwordText.length > 0) {
             console.log("User data available");
-            const emailDb = userData.user.encrypted_email;
-            const phoneDb = userData.user.encrypted_phone;
+            const emailDb = user["encrypted_email"];
+            const phoneDb = user["encrypted_phone"];
 
             passwordTyped = prk.sign(passwordText, 'base64');
             if (passwordText === emailDb ||

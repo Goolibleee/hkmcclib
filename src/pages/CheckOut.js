@@ -5,6 +5,7 @@ import { toastProp, loggingId, loadingId, getUserState } from "../Util";
 import { useDebounce } from "use-debounce";
 import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import ListView from "../ListView";
 
 const State = {
     LoggedOut: 0,
@@ -24,6 +25,7 @@ function CheckOut(props) {
     const [needConfirm, setNeedConfirm] = useState(false);
     const [notifyRequest, setNotifyRequest] = useState({});
     const [barcode, setBarcode] = useState("");
+    const [rented, setRented] = useState([]);
 
     useEffect(function () {
         async function initialize() {
@@ -161,6 +163,7 @@ function CheckOut(props) {
         console.log(obj);
         const response = await axios.get(url, btoa(JSON.stringify(obj)));
         const user = response.data.return;
+
         setUserData(user);
         console.log(user);
     }
@@ -182,6 +185,7 @@ function CheckOut(props) {
         setUserText("");
         setScannedBook({});
         setBarcode("")
+        setRented([])
         document.getElementById('barcodeScan').value= null;
     }
 
@@ -275,7 +279,7 @@ function CheckOut(props) {
                 );
             }
         },
-        [searchQuery, bookText, props.doc]
+        [searchQuery, props.doc]
     );
 
     useEffect(
@@ -285,9 +289,12 @@ function CheckOut(props) {
                 return;
             if (state !== State.LoggedIn)
             {
-                setUserText(barcode);
+                if (barcode.search("AA") === 0 || barcode.search("AB") === 0 )
+                {
+                    setUserText(barcode);
+                }
             }
-            else
+            else if (barcode.search("HK") === 0)
             {
                 const bookId = barcode;
                 console.log("Search book2 " + bookId);
@@ -343,6 +350,9 @@ function CheckOut(props) {
                 setNotifyRequest({"id": loadingId,
                                   "text": props.text.rentSucceed,
                                   "type": toast.TYPE.SUCCESS})
+                rented.push({"id": scannedBook.BARCODE, "name": scannedBook.BOOKNAME})
+                console.log(rented)
+                setRented(rented)
             }
             else
             {
@@ -361,6 +371,39 @@ function CheckOut(props) {
             updateUser(userId);
         });
     }
+
+    function showEntry(index, rent)
+    {
+    /*
+        return (<React.Fragment key={index + "Fragment"}>
+                    <tr key={index}>
+                        <td className="bookCell"> {rent.id} </td>
+                        <td colSpan="3" className="bookCell"> {rent.name} </td>
+                    </tr>
+                </React.Fragment>
+                );
+    */
+        return (<div id="bookEntry" key={rent.id}>
+                    <div id="bookItem"> {rent.id} </div>
+                    <div id="bookItem"> {rent.name} </div>
+                </div>);
+
+    }
+
+    function showBook(books)
+    {
+        return (<div id="bookList">
+                    <div id="dueDate">
+                    {props.text.dueDate} : {props.doc.dueDate}
+                    </div>
+                    {books.map((rent, index) => { return showEntry(index, rent) })}
+                </div>);
+    }
+    /*
+                    <table><tbody>
+                        {books.map((rent, index) => { return showEntry(index, rent) })}
+                    </tbody></table>
+    */
 
     function cancelAction()
     {
@@ -407,7 +450,7 @@ function CheckOut(props) {
                         </span>
                     </label>
                     <label id="manualInput">
-                        <div id="hkPrefix">
+                        <div id="hkPrefix" hidden>
                         HK
                         </div>
                         <input inputMode="numeric" pattern="[0-9]*" type="text" id="searchInput"
@@ -419,10 +462,14 @@ function CheckOut(props) {
                 </div>
                 <div id="checkRent" hidden={!needConfirm}>
                     <div id="bookName"> {props.text.confirmRent} </div>
-                    <div id="bookName"> {scannedBook.AUTHOR + ": " + scannedBook.BOOKNAME} </div>
+                    <div id="bookName"> {scannedBook.AUTHOR + ":"} </div>
+                    <div id="bookName"> {scannedBook.BOOKNAME} </div>
                     <button id="confirm" onClick={() => confirmAction()}> {props.text.confirm} </button>
                     <button id="cancel" onClick={() => cancelAction()}> {props.text.cancel} </button>
                 </div>
+                {rented.length > 0 &&
+                    <ListView list={rented} showCallback={(entry) => {return showBook(entry)}}/>
+                }
                 <button id="logOutButton" onClick={() => logOut()}> {props.text.logOut} </button>
             </div>
         </div>

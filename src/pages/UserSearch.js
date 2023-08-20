@@ -5,7 +5,8 @@ import { useDebounce } from "use-debounce";
 import { toastProp, MAX_SEARCH_ENTRY, getUserState, toUtf8 } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { Link, Navigate, useParams } from 'react-router-dom'
-import {USERS_QUERY} from "../api/query.js";
+//import {USERS_QUERY} from "../api/query.js";
+import {USERS_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 import UserInfo from "../UserInfo";
 import axios from "axios";
@@ -80,11 +81,13 @@ function CheckOut(props) {
             console.log(userLoading);
             if (userListData)
             {
+//                const users = userListData.users;
+                const users = userListData.user_tests;
                 var list = [];
                 console.log("User list available");
-                for (let i = 0; i < userListData.users.length; i++)
+                for (let i = 0; i < users.length; i++)
                 {
-                    const user = userListData.users[i];
+                    const user = users[i];
                     const entry = {"id": user._id, "name": user.name, "level": user.level, "state": getUserState(props.text, user.state)};
                     list.push(entry)
                 }

@@ -24,7 +24,9 @@ import { toast } from "react-toastify";
 import { toastProp, loadingId } from "./Util";
 import { useQuery, useLazyQuery } from "@apollo/client";
 import Navbar from "./Navbar";
-import {BOOK_QUERY, RENT_QUERY, USER_QUERY, SERVER_QUERY} from "./api/query.js";
+import {SERVER_QUERY} from "./api/query.js";
+//import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query.js";
+import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query_test.js";
 
 const doc = new Doc();
 const context = new Context();
@@ -86,12 +88,14 @@ function App() {
                 return;
             }
 
-            console.log("Login check " + context.cookie.password);
-            console.log(userData);
-            if (context.cookie.password && context.checkLogIn(userData, context.cookie.password))
+//            console.log("Login check " + context.cookie.password);
+//            const user = userData.user
+            const user = userData.user_test
+//            console.log(user);
+            if (context.cookie.password && context.checkLogIn(user, context.cookie.password))
             {
                 console.log("Login suceeded");
-                doc.logIn(userData.user);
+                doc.logIn(user);
             }
 
 
@@ -109,7 +113,8 @@ function App() {
                 console.log("Rent available");
                 logMsg = logMsg + "<p>Rent available</p>"
 //                console.log(rentData.rents)
-                doc.setRent(rentData.rents)
+//                doc.setRent(rentData.rents)
+                doc.setRent(rentData.rent_tests)
                 if (doc.initialized)
                     notifyInit()
             }
@@ -127,7 +132,8 @@ function App() {
                 console.log("Book available")
                 logMsg = logMsg + "<p>Book available</p>";
 //                console.log(bookData.books)
-                doc.setBook(bookData.books)
+//                doc.setBook(bookData.books)
+                doc.setBook(bookData.book_tests)
                 if (doc.initialized)
                     notifyInit()
             }
@@ -146,7 +152,7 @@ function App() {
 
             console.log("Server info available")
             logMsg = logMsg + "<p>Server info available</p>";
-            console.log(serverData.serverInfo)
+            console.log(serverData)
             doc.setServerInfo(serverData.serverInfo)
 
             if (!doc.serverAvailable)
@@ -175,7 +181,7 @@ function App() {
 
     function updateLog(logged) {
         console.log("==== Update logging state " + doc.logged);
-        console.log(doc.userInfo);
+//        console.log(doc.userInfo);
         setLogged(doc.logged);
     }
 

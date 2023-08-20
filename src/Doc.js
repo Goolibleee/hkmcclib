@@ -14,6 +14,7 @@ class Doc {
         this.rent = {};
         this.logCallback = undefined;
         this.admin = false;
+        this.dueDate = "";
         this.serverInfo = {};
         this.serverAvailable = false;
         this.ipAddr = ""
@@ -45,6 +46,7 @@ class Doc {
                     console.log("Server connected");
                     console.log(response.data);
                     this.admin = response.data.admin;
+                    this.dueDate = response.data.dueDate;
                     this.initialized = true;
                 })
                 .catch(error => {
@@ -79,6 +81,7 @@ class Doc {
 
     setServerInfo(serverInfo)
     {
+        console.log(serverInfo)
         this.serverInfo = serverInfo;
         console.log(this.serverInfo.globalIp);
         this.checkServerIp()
@@ -121,7 +124,7 @@ class Doc {
             const state = this.rent[i].state;
 
 //            console.log(state);
-            if (state !== "1" && state !== "3")
+            if (state !== "1" && state !== "3" && state !== 1 && state !== 3)
                 continue;
 
             const userId = this.rent[i].user_id;
@@ -140,7 +143,8 @@ class Doc {
         console.log("Logged in: " + userInfo['_id']);
         this.logged = true;
         this.userInfo = userInfo;
-        if (userInfo['level'] === "2")
+        if (userInfo['level'] === "2" ||
+            userInfo['level'] === 2)
             this.admin = true;
         if (this.logCallback)
             this.logCallback(true);
@@ -187,7 +191,7 @@ class Doc {
                 if (userId !== undefined && entry.user_id !== userId)
                     continue;
     //            console.log(entry)
-                if (entry.state !== "1" && entry.state !== "3")
+                if (entry.state !== "1" && entry.state !== "3" && entry.state !== 1 && entry.state !== 3)
                     continue;
     //            console.log(entry);
                 const id = entry["book_id"];
