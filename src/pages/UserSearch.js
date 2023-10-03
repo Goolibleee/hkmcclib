@@ -40,7 +40,11 @@ function CheckOut(props) {
             console.log("UserSearch initialize");
             console.log("User ID: " + id);
 
-            if (!props.doc.serverAvailable)
+            if (props.doc.serverAvailable)
+            {
+                import("./PageServer.css");
+            }
+            else
             {
                 console.log("Load users");
                 loadUser();
@@ -125,12 +129,42 @@ function CheckOut(props) {
         toggleQueryRequest(!queryRequest);
     }
 
+    async function extend(key)
+    {
+        console.log("Extend " + key);
+        const ipAddr = props.doc.serverInfo.localIp;
+        const portNum = props.doc.serverInfo.port;
+        if (ipAddr.length === 0 || portNum <= 0)
+            return;
+
+        const url = "https://" + ipAddr + ":" +
+            portNum + "/extend";
+        var obj = {};
+        obj["book"] = key
+
+        const ret = await axios.post(url, obj);
+        console.log("Extended")
+        console.log(ret)
+        selectId(selectedRef.current, true);
+        if (ret.data.return === "SUCCESS")
+        {
+            const prop = toastProp;
+            prop.type = toast.TYPE.SUCCESS;
+            prop.render = props.text.succeededToOpen;
+            prop.autoClose = 3000;
+            prop.toastId = "";
+            toast.info(props.text.extend, prop);
+        }
+    }
+
     const showRented = (rent, index) => {
         const id = rent["id"];
         const rentDate = rent["rentDate"];
         const retDate = rent["retDate"];
         const bookName = rent["title"];
+        const extendCount = rent.extendCount;
         const key = index.toString();
+//                        <td colSpan={props.doc.serverAvailable?"3":"2"} className="bookName">{bookName}</td>
         return (<React.Fragment key={key + "Fragment"}>
                     <tr key={key} className="bookData">
                         <td className="bookData"><Link to={"/search/"+id}>{id}</Link></td>
@@ -138,16 +172,19 @@ function CheckOut(props) {
                         <td className="bookData">{retDate}</td>
                     </tr>
                     <tr key={key + "Title"} className="bookName">
-                        <td colSpan="3" className="bookName">{bookName}</td>
+                        <td colSpan={props.doc.serverAvailable?"2":"3"} className="bookName">{bookName}</td>
+                        {props.doc.serverAvailable &&
+                            <td className="bookName"><button className="extend" onClick={() => extend(id)}>{props.text.extend + " (" + extendCount.toString() + ")"}</button></td>
+                        }
                     </tr>
                 </React.Fragment>
                 );
     }
 
-    const selectId = async (id) => {
+    const selectId = async (id, forceSelect = false) => {
         const rent = await props.doc.getRent(id);
         console.log(rent);
-        if (selectedRef.current === -1 || selectedRef.current !== id)
+        if (selectedRef.current === -1 || selectedRef.current !== id || forceSelect )
         {
             console.log("Select " + id);
 //            setSelectedId(id);
@@ -211,7 +248,7 @@ function CheckOut(props) {
                     <tr key="ID">
                         <th id="id">{props.text.id}</th>
                         <th id="rentDate">{props.text.rentDate}</th>
-                        <th id="returnDate">{props.text.returnDate}</th>
+                        <th id="returnDate">{props.text.dueDate}</th>
                     </tr>
                     {
                         detail.map((rent, index) => {

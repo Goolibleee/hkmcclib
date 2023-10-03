@@ -16,6 +16,7 @@
 		"userSearch": "User Search",
 		"checkOut": "Check Out",
 		"return": "Return",
+		"extend": "Extend",
 		"history": "Rent History",
 		"situation": "Rent State",
 		"loading": "Loading DB",
@@ -73,7 +74,8 @@
 		"adult": "Adult",
 		"admin": "Admin",
 		"regSuccess": "Registration Succeed",
-		"regFail": "Registration Fail"
+		"regFail": "Registration Fail",
+		"numberOnly": "Number Only"
 	},
 	"kr": {
 		"titleLong": "천주교 산호세 한국 순교자 성당 도서관",
@@ -92,6 +94,7 @@
 		"userSearch": "회원 검색",
 		"checkOut": "대출",
 		"return": "반납",
+		"extend": "대출 연장",
 		"history": "대출 이력",
 		"situation": "대출 현황",
 		"loading": "DB 조회 중",
@@ -149,6 +152,7 @@
 		"adult": "성인",
 		"admin": "관리자",
 		"regSuccess": "등록 완료",
-		"regFail": "등록 실패"
+		"regFail": "등록 실패",
+		"numberOnly": "숫자만 입력하세요"
 	}
 }

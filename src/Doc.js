@@ -174,7 +174,7 @@ class Doc {
                 for (const entry of result.data.return.books)
                 {
                     console.log(entry);
-                    const book = {'id': entry.BARCODE, 'title': entry.BOOKNAME, 'rentDate': entry.LENT_DATE, 'retDate': entry.RETURN_DATE, 'stat': entry.STATS}
+                    const book = {'id': entry.BARCODE, 'title': entry.BOOKNAME, 'claim': entry.CLAIM, 'rentDate': entry.LENT_DATE, 'retDate': entry.RETURN_DATE, 'stat': entry.STATS, 'extendCount': entry._EXTEND_COUNT}
                     ret.push(book);
                 }
 //                ret = result.data.return.books;
@@ -202,6 +202,7 @@ class Doc {
                 retEntry["title"] = book.title
                 retEntry["rentDate"] = entry.rent_date.split(" ")[0].replace("-","/",2).replace("-", "/")
                 retEntry["retDate"] = entry.return_date.split(" ")[0].replace("-","/",2).replace("-", "/")
+                retEntry["claim"] = book.claim
                 retEntry["user"] = entry.user_id;
                 ret.push(retEntry)
             }

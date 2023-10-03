@@ -9,6 +9,10 @@ function DropDown(props) {
 
     useEffect(
         () => {
+            if (props.doc.serverAvailable)
+            {
+                import("./DropdownServer.css");
+            }
             if (dropdown !== props.dropdown)
             {
                 console.log("User clicked " + props.doc.logged);

@@ -13,6 +13,7 @@ export const BOOK_QUERY = gql`
             claim
             publisher
             seqnum
+            isbn
         }
     }
 `;
@@ -59,7 +60,7 @@ export const HISTORY_QUERY = gql`
             book_id
             book_state
             timestamp
-            return_data
+            return_date
             user_id
         }
     }`;
@@ -71,7 +72,7 @@ export const HISTORY_PERIOD_QUERY = gql`
             book_id
             book_state
             timestamp
-            return_data
+            return_date
             user_id
         }
     }`;

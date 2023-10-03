@@ -40,6 +40,10 @@ function CheckOutStatus(props) {
             console.log("=======================================");
             console.log("CheckOutStatus initialize");
 
+            if (props.doc.serverAvailable)
+            {
+                import("./PageServer.css");
+            }
 
             if ("autoLogin" in props.context.cookie)
             {
@@ -89,13 +93,15 @@ function CheckOutStatus(props) {
                 const entry = rentLogs[i];
                 if (entry.book_state !== "1" && entry.book_state !== 1)
                     continue;
-                if (! ("return_data" in entry) || ! entry.return_data)
+                if (! ("return_date" in entry) || ! entry.return_date)
                     continue;
-                const id = entry["book_id"];
-                const title = (id in props.doc.book) ? props.doc.book[id]["title"] : "N/A";
-                const date = entry["timestamp"].split(" ")[0].replace("-", "/", 2).replace("-", "/")
-                const retDate = entry.return_data;
-                hist.push({"id": id, "title": title, "rentDate": date, "retDate": retDate});
+                console.log(entry);
+                const id = entry.book_id;
+                const title = (id in props.doc.book) ? props.doc.book[id].title : "N/A";
+                const date = entry.timestamp.split(" ")[0].replace("-", "/", 2).replace("-", "/")
+                const retDate = entry.return_date;
+                const claim = (id in props.doc.book) ? props.doc.book[id].claim : "N/A";
+                hist.push({"id": id, "title": title, "rentDate": date, "retDate": retDate, "claim": claim});
 
             }
             hist.sort(compareRent);
@@ -145,6 +151,7 @@ function CheckOutStatus(props) {
         const rentDate = rent["rentDate"];
         const retDate = rent["retDate"];
         const bookName = rent["title"];
+        const claim = rent["claim"];
         const key = index.toString();
         return (<React.Fragment key={key + "Fragment"}>
                     <tr key={key} className="bookData">
@@ -153,7 +160,8 @@ function CheckOutStatus(props) {
                         <td className="bookData">{retDate}</td>
                     </tr>
                     <tr key={key + "Title"} className="bookName">
-                        <td colSpan="3" className="bookName">{bookName}</td>
+                        <td className="bookName">{claim}</td>
+                        <td colSpan="2" className="bookName">{bookName}</td>
                     </tr>
                 </React.Fragment>
                 );

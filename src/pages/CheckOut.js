@@ -31,12 +31,24 @@ function CheckOut(props) {
         async function initialize() {
             console.log("=======================================");
             console.log("CheckOut initialize");
+            const prefixList = document.getElementsByName("idPrefix");
+            const prefix = barcode.substring(0, 2);
+            for (var i = 0 ; i < prefixList.length ; i++)
+            {
+                const id = prefixList[i].id
+                if ("AB" === id)
+                    prefixList[i].checked = true
+                else
+                    prefixList[i].checked = false
+
+            }
         }
 
         const interval = setInterval(async () => {
 //            console.log(props.doc.serverInfo);
             if (!("localIp" in props.doc.serverInfo) || !("port" in props.doc.serverInfo))
                 return;
+            import("./PageServer.css");
             const ipAddr = props.doc.serverInfo.localIp;
             const portNum = props.doc.serverInfo.port;
             if (ipAddr.length > 0 && portNum > 0)
@@ -44,10 +56,10 @@ function CheckOut(props) {
                 const url = "https://" + ipAddr + ":" +
                     portNum + "/scanBarcode";
                 axios.get(url).then( response => {
-                        const book = response.data.scan;
-                        if (book) {
-                            console.log(book)
-                            setBarcode(book)
+                        const code = response.data.scan;
+                        if (code) {
+                            console.log(code)
+                            setBarcode(code)
                         }
                     }
                 );
@@ -153,7 +165,19 @@ function CheckOut(props) {
     useEffect(
         () => {
             if (state !== State.LoggedIn)
-                setBarcode(userText);
+            {
+                const prefixList = document.getElementsByName("idPrefix");
+                var prefix = ""
+                for (var i = 0 ; i < prefixList.length ; i++)
+                {
+                    if (prefixList[i].checked)
+                        prefix = prefixList[i].id
+                        console.log("Pressed [" + i.toString() + " " + prefix + "]")
+
+                }
+                const barcode = prefix + userText
+                setBarcode(barcode);
+            }
         }, [state, userText]
     );
 
@@ -170,11 +194,11 @@ function CheckOut(props) {
 
     const logIn = async () => {
         console.log("LOGIN");
-        console.log(userText);
-        if (userText.length === 0)
+        console.log(barcode);
+        if (barcode.length === 0)
             return;
         setState(State.LoggingIn);
-        const id = userText.toUpperCase();
+        const id = barcode.toUpperCase();
         setUserId(id);
         updateUser(id);
     }
@@ -284,14 +308,25 @@ function CheckOut(props) {
 
     useEffect(
         () => {
-            console.log("Barcode: " + barcode);
+            console.log("Set barcode: " + barcode);
             if (barcode.length === 0)
                 return;
             if (state !== State.LoggedIn)
             {
                 if (barcode.search("AA") === 0 || barcode.search("AB") === 0 )
                 {
-                    setUserText(barcode);
+                    const prefixList = document.getElementsByName("idPrefix");
+                    const prefix = barcode.substring(0, 2);
+                    for (var i = 0 ; i < prefixList.length ; i++)
+                    {
+                        const id = prefixList[i].id
+                        if (prefix === id)
+                            prefixList[i].checked = true
+                        else
+                            prefixList[i].checked = false
+
+                    }
+                    setUserText(barcode.substring(2));
                 }
             }
             else if (barcode.search("HK") === 0)
@@ -424,7 +459,11 @@ function CheckOut(props) {
                 </h2>
             </div>
             <div id="checkOutInput" hidden={state === State.LoggedIn}>
-                <input type="text" id="searchInput"
+                <input type="radio" id = "AA" name="idPrefix"/>
+                <label htmlFor="AA" className="idPrefix" name="idPrefix"> AA </label>
+                <input type="radio" id = "AB" name="idPrefix"/>
+                <label htmlFor="AB" className="idPrefix" name="idPrefix"> AB </label>
+                <input type="text" id="searchInput" pattern="[0-9]*" inputMode="numeric"
                     placeholder={props.text.idHolder}
                     value={userText}
                     onInput={(event) => {
@@ -450,8 +489,8 @@ function CheckOut(props) {
                         </span>
                     </label>
                     <label id="manualInput">
-                        <div id="hkPrefix" hidden>
-                        HK
+                        <div id="hkPrefix">
+                        {props.text.numberOnly}
                         </div>
                         <input inputMode="numeric" pattern="[0-9]*" type="text" id="searchInput"
                             placeholder={props.text.bookHolder}

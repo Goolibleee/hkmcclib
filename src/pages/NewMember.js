@@ -19,6 +19,7 @@ function NewMember(props) {
             {
                 return;
             }
+            import("./PageServer.css");
             console.log("=======================================");
             console.log("NewMember initialize");
             prepareNewMember();

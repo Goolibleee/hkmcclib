@@ -107,6 +107,7 @@ function App() {
             console.log("Rent Query Updated");
             logMsg = logMsg + "<p>Rent Query Updated " + rentLoading + " " + rentError + "</p>";
             console.log(rentLoading);
+            console.log("Rent Error");
             console.log(rentError);
             if (rentData)
             {

@@ -180,14 +180,13 @@ background-color: white;
 }
 
 #manualInput {
-    display: flex;
 }
 
 #hkPrefix {
+    width: 100%;
     font-size: 1.2rem;
-    vertical-align: middle;
-    width: 10%;
-    padding-top: 12px;
+    padding: 12px;
+    text-align: left;
 }
 
 #name {
@@ -204,7 +203,7 @@ background-color: white;
     border: hidden;
 }
 
-#searchInput, #searchPassword, #logIn, #logOutButton, #confirm, #cancel, #checkRent, #checkReturn {
+#searchInput, #searchPassword, #logIn, #logOutButton, #confirm, #cancel, #checkRent, #checkReturn, #idPrefix {
     width: 100%;
     font-size: 1.1rem;
     border: 2px solid lightgray;
@@ -213,6 +212,12 @@ background-color: white;
     padding: 1rem;
     box-sizing: border-box;
     text-align: center;
+}
+
+.idPrefix, #AA, #AB {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
 }
 
 .bookStates {
@@ -226,6 +231,18 @@ background-color: white;
     text-align: center;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+}
+
+.extend {
+    width: 80%;
+    font-size: 1.1rem;
+    border: 2px solid lightgray;
+    border-radius: 1rem;
+    outline: none;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    text-align: center;
+    margin: 0.5rem;
 }
 
 #logIn, #logOutButton
@@ -492,7 +509,7 @@ td.content {
     }
     #title {
         margin-left: 0.5rem;
-        font-size: 1.8rem;
+        font-size: 1.0rem;
     }
     #reader {
         width: 100%;
@@ -501,17 +518,14 @@ td.content {
         width: 100%;
         margin-left: 0em;
         margin-right: 0em;
-        font-size: 1.8rem;
     }
     #search, #checkOut, #situation, #notice {
         padding: 0px;
     }
     #hkPrefix {
-        font-size: 1.8rem;
     }
     #searchInput, #searchPassword, #logIn, #logOutButton, #confirm, #cancel, #checkRent, #checkReturn {
         width: 100%;
-        font-size: 1.8rem;
         border: 2px solid gray;
     }
     #userInfo {
@@ -523,7 +537,6 @@ td.content {
     }
     #userItem {
         width: 100%;
-        font-size: 1.8rem;
         padding: 5px;
     }
     #bookList {
@@ -534,7 +547,6 @@ td.content {
         width: 100%;
         flex-direction: column;
         display: flex;
-        font-size:1.5rem;
         padding: 1rem;
     }
 

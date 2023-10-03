@@ -64,6 +64,7 @@ function RentHistory(props) {
 
             if (props.doc.serverAvailable)
             {
+                import("./PageServer.css");
 //                updateDoc();
             }
             else
@@ -120,7 +121,7 @@ function RentHistory(props) {
                 const state = book.book_state;
                 if (state !== "1" && state !== 1)
                     continue
-                if (!book.return_data || book.return_data.length === 0)
+                if (!book.return_date || book.return_date.length === 0)
                     continue
 //                console.log(book)
                 const bookId = book.book_id;
@@ -145,7 +146,7 @@ function RentHistory(props) {
                     bookInfo.title = ""
                 }
                 const resultString = `${bookInfo.title} ${bookInfo.claim_num}`;
-                retDate = book.return_data;
+                retDate = book.return_date;
                 let resultObject = {
                     index: i,
                     text: resultString,
@@ -199,6 +200,7 @@ function RentHistory(props) {
         const rentDate = rent["rentDate"];
         const retDate = rent["retDate"];
         const bookName = rent["title"];
+        const claim = rent["claim"];
         const userId = rent["user"];
         const userName = rent["userName"];
         const key = index.toString();
@@ -216,7 +218,8 @@ function RentHistory(props) {
                         <td className="bookCell">{retDate}</td>
                     </tr>
                     <tr key={key + "Title"} className="bookRow">
-                        <td colSpan="3" className="bookCell">{bookName}</td>
+                        <td className="bookName">{claim}</td>
+                        <td colSpan="2" className="bookCell">{bookName}</td>
                     </tr>
                     <tr key={key + "Renter"} className="bookBottom">
                         <td className="bookCell"><Link to={"/userSearch/"+userId}> {userId} </Link></td>

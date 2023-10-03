@@ -33,6 +33,10 @@ function Search(props) {
                 updateDoc();
             else
                 props.doc.setCallback(updateDoc);
+            if (props.doc.serverAvailable)
+            {
+                import("./PageServer.css");
+            }
             console.log("BOOK ID: " + id);
         }
         initialize();
@@ -95,7 +99,8 @@ function Search(props) {
                             claim_num: book.CLAMENUM,
                             publish: book.PUBLISH,
                             claim: book.CLAIM,
-                            state: book._STATE
+                            state: book._STATE,
+                            isbn: book.ISBN
                         };
                         results.push(resultObject);
                     }
@@ -107,7 +112,8 @@ function Search(props) {
                         const row = bookList[i];
                         if (results.length >= MAX_SEARCH_ENTRY) break;
                         if ((row.name && row.name.toString().includes(text)) ||
-                            (row.code === text))
+                            (row.code === text) ||
+                            (row.isbn === text))
                         {
                             let resultString = `${row.name} ${row.claim_num}`;
                             let retDate = "";
@@ -136,9 +142,11 @@ function Search(props) {
                                 claim_num: row.claim_num,
                                 publish: row.publish,
                                 claim: row.claim,
-                                state: parseInt(state)
+                                state: parseInt(state),
+                                isbn: row.isbn
                             };
                             results.push(resultObject);
+                            console.log(resultObject);
                         }
                     }
                 }
@@ -183,7 +191,7 @@ function Search(props) {
         {
            const book = books[key];
            bl.push({code: book._id, name: book.title, num: book.num, author: book.author, claim: book.claim,
-                    claim_num: book.claim_num, totalName: book.series, category: book.publisher, publish: book.publisher});
+                    claim_num: book.claim_num, totalName: book.series, category: book.publisher, publish: book.publisher, isbn: book.isbn});
         }
         console.log("Load");
         console.log(books.length);

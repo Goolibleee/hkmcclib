@@ -33,6 +33,7 @@ function Return(props) {
         const interval = setInterval(async () => {
             if (!("localIp" in props.doc.serverInfo) || !("port" in props.doc.serverInfo))
                 return;
+            import("./PageServer.css")
             const ipAddr = props.doc.serverInfo.localIp;
             const portNum = props.doc.serverInfo.port;
             if (ipAddr && ipAddr.length > 0 && portNum > 0)
@@ -384,8 +385,8 @@ function Return(props) {
                     </span>
                 </label>
                 <label id="manualInput">
-                    <div id="hkPrefix" hidden>
-                        HK
+                    <div id="hkPrefix">
+                        {props.text.numberOnly}
                     </div>
                     <input inputMode="numeric" pattern="\d*" type="text" id="searchInput"
                         placeholder={props.text.bookHolder}
