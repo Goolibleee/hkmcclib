@@ -5,8 +5,8 @@ import { getUserState } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { compareRent } from "../Util";
 import { Link, Navigate } from 'react-router-dom'
-//import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query.js";
-import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query_test.js";
+import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query.js";
+//import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 import axios from "axios";
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
@@ -85,8 +85,8 @@ function RentHistory(props) {
             console.log(userLoading);
             if (userListData)
             {
-//                const users = userListData.users;
-                const users = userListData.user_tests;
+                const users = userListData.users;
+//                const users = userListData.user_tests;
                 var list = [];
                 console.log("User list available");
                 for (let i = 0; i < users.length; i++)
@@ -111,8 +111,8 @@ function RentHistory(props) {
 
 //            console.log(historyData.rentLog_tests)
 
-//            const books = historyData.rentLogs;
-            const books = historyData.rentLog_tests;
+            const books = historyData.rentLogs;
+//            const books = historyData.rentLog_tests;
             let results = [];
             let retDate = "";
             for (let i = 0 ; i < books.length ; i++)

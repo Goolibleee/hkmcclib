@@ -13,6 +13,7 @@ export const BOOK_QUERY = gql`
             claim
             publisher
             seqnum
+            registration_date
             isbn
         }
     }

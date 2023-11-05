@@ -4,8 +4,8 @@ import { toast } from "react-toastify";
 import { toastProp, loggingId, compareRent } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { Link, Navigate } from 'react-router-dom'
-//import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
-import {USER_QUERY, HISTORY_QUERY} from "../api/query_test.js";
+import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
+//import {USER_QUERY, HISTORY_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 
 const State = {
@@ -86,8 +86,8 @@ function CheckOutStatus(props) {
                 return;
             console.log("History updated ");
             let hist = [];
-//            const rentLogs = historyData.rentLogs;
-            const rentLogs = historyData.rentLog_tests;
+            const rentLogs = historyData.rentLogs;
+//            const rentLogs = historyData.rentLog_tests;
             for (let i = 0 ; i < rentLogs.length ; i++)
             {
                 const entry = rentLogs[i];
@@ -213,9 +213,9 @@ function CheckOutStatus(props) {
         const prop = toastProp;
 
         let text;
-        if (props.context.checkLogIn(userData.user_test, passwordText))
+        if (props.context.checkLogIn(userData.user, passwordText))
         {
-            props.doc.logIn(userData.user_test);
+            props.doc.logIn(userData.user);
 
             setSearchResults(await props.doc.getRent(userId));
             setState(State.LoggedIn);

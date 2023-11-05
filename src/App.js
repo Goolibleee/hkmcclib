@@ -25,8 +25,8 @@ import { toastProp, loadingId } from "./Util";
 import { useQuery, useLazyQuery } from "@apollo/client";
 import Navbar from "./Navbar";
 import {SERVER_QUERY} from "./api/query.js";
-//import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query.js";
-import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query_test.js";
+import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query.js";
+//import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query_test.js";
 
 const doc = new Doc();
 const context = new Context();
@@ -89,8 +89,8 @@ function App() {
             }
 
 //            console.log("Login check " + context.cookie.password);
-//            const user = userData.user
-            const user = userData.user_test
+            const user = userData.user
+//            const user = userData.user_test
 //            console.log(user);
             if (context.cookie.password && context.checkLogIn(user, context.cookie.password))
             {
@@ -114,8 +114,8 @@ function App() {
                 console.log("Rent available");
                 logMsg = logMsg + "<p>Rent available</p>"
 //                console.log(rentData.rents)
-//                doc.setRent(rentData.rents)
-                doc.setRent(rentData.rent_tests)
+                doc.setRent(rentData.rents)
+//                doc.setRent(rentData.rent_tests)
                 if (doc.initialized)
                     notifyInit()
             }
@@ -133,8 +133,8 @@ function App() {
                 console.log("Book available")
                 logMsg = logMsg + "<p>Book available</p>";
 //                console.log(bookData.books)
-//                doc.setBook(bookData.books)
-                doc.setBook(bookData.book_tests)
+                doc.setBook(bookData.books)
+//                doc.setBook(bookData.book_tests)
                 if (doc.initialized)
                     notifyInit()
             }

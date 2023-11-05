@@ -24,6 +24,7 @@
 		"searchUser" : "Enter name or ID",
 		"searchBook" : "Enter book keywords",
 		"failedToOpen" : "Failed to open DB Refresh page later",
+		"all": "All",
 		"available" : "Available",
 		"checkedOut" : "Checked out",
 		"reserved" : "Reserved",
@@ -75,7 +76,11 @@
 		"admin": "Admin",
 		"regSuccess": "Registration Succeed",
 		"regFail": "Registration Fail",
-		"numberOnly": "Number Only"
+		"numberOnly": "Number Only",
+		"advSearch": "Advanced Search",
+		"search": "Search",
+		"author": "Author",
+		"bookCode": "Book code"
 	},
 	"kr": {
 		"titleLong": "천주교 산호세 한국 순교자 성당 도서관",
@@ -102,6 +107,7 @@
 		"searchUser" : "이름 또는 회원번호를 입력하세요",
 		"searchBook" : "책 키워드를 입력하세요",
 		"failedToOpen": "DB 조회가 실패하였습니다 잠시 후 화면을 갱신해주세요",
+		"all": "전체",
 		"available" : "대출가능",
 		"checkedOut" : "대출중",
 		"reserved" : "예약중",
@@ -153,6 +159,11 @@
 		"admin": "관리자",
 		"regSuccess": "등록 완료",
 		"regFail": "등록 실패",
-		"numberOnly": "숫자만 입력하세요"
+		"numberOnly": "숫자만 입력하세요",
+		"advSearch": "상세 검색",
+		"search": "검색",
+		"author": "저자",
+		"bookCode": "도서번호"
+
 	}
 }
