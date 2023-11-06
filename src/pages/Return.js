@@ -6,6 +6,7 @@ import { useDebounce } from "use-debounce";
 import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ListView from "../ListView";
+import { useNavigate } from "react-router-dom";
 
 function Return(props) {
     const [bookText, setBookText] = useState("");
@@ -22,6 +23,7 @@ function Return(props) {
     const [notifyRequest, setNotifyRequest] = useState({});
     const [barcode, setBarcode] = useState("");
     const [returned, setReturned] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(function () {
         async function initialize() {
@@ -32,6 +34,8 @@ function Return(props) {
 
         const interval = setInterval(async () => {
             if (!("localIp" in props.doc.serverInfo) || !("port" in props.doc.serverInfo))
+                return;
+            if (props.doc.admin)
                 return;
             import("./PageServer.css")
             const ipAddr = props.doc.serverInfo.localIp;
@@ -107,7 +111,11 @@ function Return(props) {
         () => {
             if (bookText.length > 0)
             {
-                const bookId = "HK" + bookText;
+                var bookId;
+                if (props.doc.admin)
+                    bookId = bookText;
+                else
+                    bookId = "HK" + bookText;
                 console.log("Search book1 " + bookId);
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
@@ -368,6 +376,10 @@ function Return(props) {
                 </div>);
     }
 
+    const logOut = async () => {
+        console.log("Finish")
+        navigate("/")
+    }
 
     return (
         <div id="checkOut">
@@ -406,6 +418,7 @@ function Return(props) {
                     <ListView list={returned} showCallback={(entry) => {return showBook(entry)}}/>
                 }
             </div>
+            <button id="logOutButton" onClick={() => logOut()}> {props.text.finish} </button>
         </div>
     );
 }

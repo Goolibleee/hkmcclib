@@ -6,6 +6,7 @@ import { useDebounce } from "use-debounce";
 import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ListView from "../ListView";
+import { useNavigate } from "react-router-dom";
 
 const State = {
     LoggedOut: 0,
@@ -26,6 +27,7 @@ function CheckOut(props) {
     const [notifyRequest, setNotifyRequest] = useState({});
     const [barcode, setBarcode] = useState("");
     const [rented, setRented] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(function () {
         async function initialize() {
@@ -47,6 +49,8 @@ function CheckOut(props) {
         const interval = setInterval(async () => {
 //            console.log(props.doc.serverInfo);
             if (!("localIp" in props.doc.serverInfo) || !("port" in props.doc.serverInfo))
+                return;
+            if (props.doc.admin)
                 return;
             import("./PageServer.css");
             const ipAddr = props.doc.serverInfo.localIp;
@@ -175,7 +179,11 @@ function CheckOut(props) {
                         console.log("Pressed [" + i.toString() + " " + prefix + "]")
 
                 }
-                const barcode = prefix + userText
+                let barcode;
+                if (userText[0] === "A" || userText[0] == "a")
+                    barcode = userText;
+                else
+                    barcode = prefix + userText;
                 setBarcode(barcode);
             }
         }, [state, userText]
@@ -190,6 +198,7 @@ function CheckOut(props) {
 
         setUserData(user);
         console.log(user);
+        setUserId(user.USER_CODE);
     }
 
     const logIn = async () => {
@@ -199,18 +208,18 @@ function CheckOut(props) {
             return;
         setState(State.LoggingIn);
         const id = barcode.toUpperCase();
-        setUserId(id);
         updateUser(id);
     }
 
     const logOut = async () => {
-        console.log("Log Out");
+        console.log("Finish")
         setUserData({});
         setUserText("");
         setScannedBook({});
         setBarcode("")
         setRented([])
         document.getElementById('barcodeScan').value= null;
+        navigate("/")
     }
 
     function getBase64(file) {
@@ -283,7 +292,11 @@ function CheckOut(props) {
         () => {
             if (bookText.length > 0)
             {
-                const bookId = "HK" + bookText;
+                var bookId;
+                if (props.doc.admin)
+                    bookId = bookText;
+                else
+                    bookId = "HK" + bookText;
                 console.log("Search book1 " + bookId);
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
@@ -509,8 +522,8 @@ function CheckOut(props) {
                 {rented.length > 0 &&
                     <ListView list={rented} showCallback={(entry) => {return showBook(entry)}}/>
                 }
-                <button id="logOutButton" onClick={() => logOut()}> {props.text.logOut} </button>
             </div>
+            <button id="logOutButton" onClick={() => logOut()}> {props.text.finish} </button>
         </div>
     );
 }

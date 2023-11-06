@@ -80,7 +80,8 @@
 		"advSearch": "Advanced Search",
 		"search": "Search",
 		"author": "Author",
-		"bookCode": "Book code"
+		"bookCode": "Book code",
+		"finish": "Finish"
 	},
 	"kr": {
 		"titleLong": "천주교 산호세 한국 순교자 성당 도서관",
@@ -163,7 +164,7 @@
 		"advSearch": "상세 검색",
 		"search": "검색",
 		"author": "저자",
-		"bookCode": "도서번호"
-
+		"bookCode": "도서번호",
+		"finish": "완료"
 	}
 }

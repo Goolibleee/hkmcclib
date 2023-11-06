@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Link } from 'react-router-dom'
 import "./Home.css";
 
 function Home(props) {
@@ -11,7 +12,17 @@ function Home(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return (<div id="home" dangerouslySetInnerHTML={{__html:props.text.homeText}}></div>);
+    if (!props.doc.serverAvailable)
+        return (<div id="home" dangerouslySetInnerHTML={{__html:props.text.homeText}}></div>);
+    else
+        return (<div id="home">
+                    <Link className='home-items' to="/checkOut">
+                        {props.text.checkOut}
+                    </Link>
+                    <Link className='home-items' to="/return">
+                        {props.text.return}
+                    </Link>
+                </div>);
 }
 
 export default Home;
