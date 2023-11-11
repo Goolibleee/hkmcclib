@@ -13,8 +13,12 @@ function Home(props) {
     }, []);
 
     if (!props.doc.serverAvailable)
+    {
         return (<div id="home" dangerouslySetInnerHTML={{__html:props.text.homeText}}></div>);
+    }
     else
+    {
+        import("./PageServer.css");
         return (<div id="home">
                     <Link className='home-items' to="/checkOut">
                         {props.text.checkOut}
@@ -23,6 +27,7 @@ function Home(props) {
                         {props.text.return}
                     </Link>
                 </div>);
+    }
 }
 
 export default Home;

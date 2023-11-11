@@ -3,7 +3,6 @@ import "./Page.css"
 import { useDebounce } from "use-debounce";
 import { MAX_SEARCH_ENTRY, getBookState, toUtf8 } from "../Util";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import ListView from "../ListView";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
@@ -80,11 +79,10 @@ function Search(props) {
                     console.log(btoa(toUtf8(text)));
                     const url = "https://" + props.doc.serverInfo.localIp + ":" +
                         props.doc.serverInfo.port + "/book";
-                    const obj = {"params": {"book": btoa(toUtf8(text)), "match":false}};
                     console.log("=======================");
                     console.log("Request book list");
-                    console.log(obj);
-                    const response = await axios.get(url, obj);
+                    const param = {"book": btoa(toUtf8(text)), "match":false};
+                    const response = await props.doc.requestGet(url, param);
                     console.log(response)
                     if (!("books" in response.data.return))
                         return results;
@@ -258,10 +256,7 @@ function Search(props) {
         obj["state"] = bookStateRef.current;
         console.log("=======================");
         console.log("Change book state");
-        console.log(obj);
-        await axios.post(url, obj).then( response => {
-            console.log(response);
-        });
+        await props.doc.requestPost(url, obj);
 
         toggleQueryRequest(!queryRequest);
     }

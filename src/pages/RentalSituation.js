@@ -7,7 +7,6 @@ import { Link, Navigate } from 'react-router-dom'
 import {USERS_QUERY} from "../api/query.js";
 //import {USERS_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
-import axios from "axios";
 
 function RentHistory(props) {
     const [rentList, setRentList] = useState([]);
@@ -81,9 +80,9 @@ function RentHistory(props) {
             let results = [];
             const url = "https://" + props.doc.serverInfo.localIp + ":" +
                 props.doc.serverInfo.port + "/book";
-            const obj = {"params": {"user": "*", "match":false}};
+            const param = {"user": "*", "match":false};
 //            console.log(obj);
-            const response = await axios.get(url, obj);
+            const response = await props.doc.requestGet(url, param);
 //           console.log(response)
 //            if (!("books" in response.data.return))
 //                return results;

@@ -47,6 +47,8 @@ function App() {
     useEffect(function () {
         async function initialize() {
             console.log("Initialize app");
+            console.log("Platform: ");
+            console.log(navigator.platform);
             logMsg = logMsg + "<p>Initialize app</p>";
             console.log(process.env.APP_NAME);
             console.log(process.env.APP_VERSION);

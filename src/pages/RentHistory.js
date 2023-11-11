@@ -8,7 +8,6 @@ import { Link, Navigate } from 'react-router-dom'
 import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query.js";
 //import {USERS_QUERY, HISTORY_PERIOD_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
-import axios from "axios";
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
@@ -281,9 +280,8 @@ function RentHistory(props) {
             {
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/history";
-                const obj = {"params": {"period": query}};
-                console.log(obj);
-                const response = await axios.get(url, obj);
+                const param = {"period": query};
+                const response = await props.doc.requestGet(url, param);
                 console.log(response);
 
                 const books = response.data.return.books;
@@ -293,9 +291,9 @@ function RentHistory(props) {
                 {
                     const book = books[i];
                     const resultString = `${book.BOOKNAME} ${book.CLAIMNUM}`;
-                    if ("RETURN_DATE" in book)
+                    if ("_RETURN_DATE" in book)
                     {
-                        retDate = book.RETURN_DATE;
+                        retDate = book._RETURN_DATE;
                     }
                     let resultObject = {
                         index: i,

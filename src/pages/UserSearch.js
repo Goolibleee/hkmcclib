@@ -9,7 +9,6 @@ import {USERS_QUERY} from "../api/query.js";
 //import {USERS_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 import UserInfo from "../UserInfo";
-import axios from "axios";
 
 //var rentList = [];
 
@@ -142,7 +141,7 @@ function CheckOut(props) {
         var obj = {};
         obj["book"] = key
 
-        const ret = await axios.post(url, obj);
+        const ret = await props.doc.requestPost(url, obj);
         console.log("Extended")
         console.log(ret)
         selectId(selectedRef.current, true);
@@ -290,9 +289,8 @@ function CheckOut(props) {
                     {
                         console.log("from CLIB")
                         const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/users";
-                        const obj = {"params": {"user": btoa(toUtf8(input))}};
-                        console.log(obj);
-                        const response = await axios.get(url, obj);
+                        const param = {"user": btoa(toUtf8(input))};
+                        const response = await props.doc.requestGet(url, param);
                         const users = response.data.return.data;
                         console.log(response.data.return);
                         sr = [];

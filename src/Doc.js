@@ -20,6 +20,26 @@ class Doc {
         this.ipAddr = ""
     }
 
+    async requestGet(url, param)
+    {
+        param.os = navigator.platform;
+        const obj = {"params": param};
+        console.log("Request GET : " + url);
+        console.log(obj);
+        const response = await axios.get(url, obj);
+        return response;
+    }
+
+    async requestPost(url, param)
+    {
+        console.log("Request POST: " + url);
+        param.os = navigator.platform;
+        console.log(param);
+        const response = await axios.post(url, param);
+
+        return response;
+    }
+
     async updateIpAddr()
     {
 //        const response = await axios.get("https://ipv4.seeip.org/jsonip");
@@ -41,7 +61,7 @@ class Doc {
             console.log("Server is accessible " + this.serverInfo.localIp);
             const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
             this.serverAvailable = true;
-            axios.get(query, {timeout: 1000})
+            axios.get(query, {"params": {"os": navigator.platform, }})
                 .then( (response) => {
                     console.log("Server connected");
                     console.log(response.data);
@@ -83,6 +103,21 @@ class Doc {
     {
         console.log(serverInfo)
         this.serverInfo = serverInfo;
+        this.serverInfo = {}
+        this.serverInfo.globalIp = serverInfo.globalIp;
+
+        if (serverInfo.proxy)
+        {
+            this.serverInfo.localIp = "libserver.hkmcclibrary.duckdns.org";
+            this.serverInfo.port = 443;
+        }
+        else
+        {
+            this.serverInfo.localIp = serverInfo.localIp;
+            this.serverInfo.port = serverInfo.port;
+        }
+
+
         console.log(this.serverInfo.globalIp);
         this.checkServerIp()
     }
@@ -163,9 +198,8 @@ class Doc {
         if (this.serverAvailable) {
             const url = "https://" + this.serverInfo.localIp + ":" +
                 this.serverInfo.port + "/book";
-            const obj = {"params": {"user": userId}};
-            console.log(obj);
-            const result = await axios.get(url, obj);
+            const param = {"user": userId};
+            const result = await this.requestGet(url, param);
             console.log(result);
             if ("books" in result.data.return)
             {

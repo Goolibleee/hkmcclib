@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { toUtf8 } from "./Util";
 import "./UserInfo.css";
 
@@ -58,7 +57,7 @@ function UserInfo(props) {
         setUserInfo(info);
     }
 
-    function confirmAction()
+    async function confirmAction()
     {
         console.log("Save modification");
         console.log(userInfo);
@@ -76,10 +75,9 @@ function UserInfo(props) {
         {
             obj[key] = btoa(toUtf8(userInfo[key]));
         }
-        axios.post(url, obj).then( response => {
-            console.log(response);
-            props.refresh(response);
-        });
+        const response = await props.doc.requestPost(url, obj);
+        console.log(response);
+        props.refresh(response);
         setNeedConfirm(false);
     }
 

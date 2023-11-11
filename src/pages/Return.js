@@ -3,7 +3,6 @@ import "./Page.css"
 import { toast } from "react-toastify";
 import { toastProp, loadingId } from "../Util";
 import { useDebounce } from "use-debounce";
-import axios from "axios";
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ListView from "../ListView";
 import { useNavigate } from "react-router-dom";
@@ -44,17 +43,15 @@ function Return(props) {
             {
                 const url = "https://" + ipAddr + ":" +
                     portNum + "/scanBarcode";
-                axios.get(url).then( response => {
-                        const book = response.data.scan;
-                        if (book) {
-                            console.log(book.search("HK"))
-                            if (book.search("HK") === 0) {
-                                console.log(barcode + " -> " + book)
-                                setBarcode(book)
-                            }
-                        }
+                const response = await props.doc.requestGet(url);
+                const book = response.data.scan;
+                if (book) {
+                    console.log(book.search("HK"))
+                    if (book.search("HK") === 0) {
+                        console.log(barcode + " -> " + book)
+                        setBarcode(book)
                     }
-                );
+                }
             }
         }, 1000)
 
@@ -108,7 +105,7 @@ function Return(props) {
 */
 
     useEffect(
-        () => {
+        async () => {
             if (bookText.length > 0)
             {
                 var bookId;
@@ -120,25 +117,20 @@ function Return(props) {
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
 //                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
-                const obj = {"params": {"book": bookId, "match": true}};
-                console.log(obj);
-                axios.get(url, obj).then( response => {
-                        const book = response.data.return;
-                        console.log(book)
-//                        if ('BOOKNAME' in book)
-                        if ('books' in book && 'BOOKNAME' in book.books)
-                        {
-                            setScannedBook(book.books)
-                        }
-                    }
-                );
+                const param = {"book": bookId, "match": true};
+                const response = await props.doc.requestGet(url, param);
+                const book = response.data.return;
+                if ('books' in book && 'BOOKNAME' in book.books)
+                {
+                    setScannedBook(book.books)
+                }
             }
         },
         [searchQuery, props.doc]
     );
 
     useEffect(
-        () => {
+        async () => {
             console.log("B" + barcode);
             if (barcode.length > 0)
             {
@@ -146,19 +138,14 @@ function Return(props) {
                 console.log("Search book2 " + bookId);
                 const url = "https://" + props.doc.serverInfo.localIp + ":" +
                     props.doc.serverInfo.port + "/book";
-//                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
-                const obj = {"params": {"book": bookId, "match": true}};
-                console.log(obj);
-                axios.get(url, obj).then( response => {
-                        const book = response.data.return;
-                        console.log(book)
-//                        if ('BOOKNAME' in book)
-                        if ('books' in book && 'BOOKNAME' in book.books)
-                        {
-                            setScannedBook(book.books)
-                        }
-                    }
-                );
+                const param = {"book": bookId, "match": true};
+                const response = await props.doc.requestGet(url, param);
+                const book = response.data.return;
+                console.log(book)
+                if ('books' in book && 'BOOKNAME' in book.books)
+                {
+                    setScannedBook(book.books)
+                }
             }
         },
         [barcode, props.doc]
@@ -171,60 +158,6 @@ function Return(props) {
             reader.onload = () => resolve(reader.result);
             reader.onerror = error => reject(error);
         });
-    }
-
-    function imageCaptured(e)
-    {
-        console.log("Image Captured");
-        if (e.target.files && e.target.files.length > 0)
-        {
-            const file = e.target.files[0];
-            console.log(file)
-            console.log(file.type);
-//            setResult(file.type + " " + file.size.toString());
-            const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/uploadImage"
-            setNotifyRequest({"id": loadingId,
-                              "text": props.text.loading,
-                              "type": toast.TYPE.INFO})
-            getBase64(file).then(
-                img => {
-                    axios({
-                        method: "post",
-                        mode: 'no-cors',
-                        crossDomain: 'true',
-                        url: url,
-                        headers: {
-                            "Access-Control-Allow-Origin": "*",
-                            "Content-Type": "application/json",
-                            "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS"
-                        },
-                        withCredentials: false,
-                        credentials: 'same-origin',
-                        data: {
-                            image: img
-                        }
-                    }).then( response => {
-                        const book = response.data.return
-                        console.log(book)
-                        if ('BOOKNAME' in book)
-                        {
-                            setScannedBook(book)
-                            setNotifyRequest({"id": loadingId,
-                                              "text": props.text.succeededToOpen,
-                                              "type": toast.TYPE.SUCCESS});
-                        }
-                        else
-                        {
-                            setNotifyRequest({"id": loadingId,
-                                              "text": props.text.INVALID_BOOK,
-                                              "type": toast.TYPE.ERROR})
-                            setScannedBook({})
-                            setBarcode("")
-                        }
-                    });
-                }
-            );
-        }
     }
 
     useEffect(
@@ -290,67 +223,48 @@ function Return(props) {
             console.log("Search book1 " + bookId);
             const url = "https://" + props.doc.serverInfo.localIp + ":" +
                 props.doc.serverInfo.port + "/book";
-//                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
-            const obj = {"params": {"books": returned}};
-            console.log(obj);
-            axios.get(url, obj).then( response => {
-//                    const book = response.data.return;
-//                    console.log(book)
-                }
-            );
+            const param = {"books": returned};
+            props.doc.requestGet(url, param);
         },
         [returned]
     );
 
-    function confirmAction()
+    async function confirmAction()
     {
         console.log("Confirmed");
         setNeedConfirm(false);
         console.log(scannedBook);
 
         const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/return"
-        axios({
-            method: "post",
-            mode: 'no-cors',
-            crossDomain: 'true',
-            url: url,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS"
-            },
-            withCredentials: false,
-            credentials: 'same-origin',
-            data: {
-                book: scannedBook.BARCODE
-            }
-        }).then( response => {
-            const ret = response.data.return;
-            console.log(ret);
-            if (ret === "SUCCESS")
-            {
-                setNotifyRequest({"id": loadingId,
-                                  "text": props.text.returnSucceed,
-                                  "type": toast.TYPE.SUCCESS})
-                returned.push({"id": scannedBook.BARCODE, "name": scannedBook.BOOKNAME})
-                console.log(returned)
-                setReturned(returned)
-            }
+        const param = {
+            book: scannedBook.BARCODE
+        }
+        const response = await props.doc.requestPost(url, param)
+        const ret = response.data.return;
+        console.log(ret);
+        if (ret === "SUCCESS")
+        {
+            setNotifyRequest({"id": loadingId,
+                              "text": props.text.returnSucceed,
+                              "type": toast.TYPE.SUCCESS})
+            returned.push({"id": scannedBook.BARCODE, "name": scannedBook.BOOKNAME})
+            console.log(returned)
+            setReturned(returned)
+        }
+        else
+        {
+            let text
+            if (ret in props.text)
+                text = props.text[ret];
             else
-            {
-                let text
-                if (ret in props.text)
-                    text = props.text[ret];
-                else
-                    text = props.text.NOT_AVAILABLE;
-                console.log(text)
-                setNotifyRequest({"id": loadingId,
-                                  "text": text,
-                                  "type": toast.TYPE.ERROR})
-            }
-            setScannedBook({});
-            setBarcode("")
-        });
+                text = props.text.NOT_AVAILABLE;
+            console.log(text)
+            setNotifyRequest({"id": loadingId,
+                              "text": text,
+                              "type": toast.TYPE.ERROR})
+        }
+        setScannedBook({});
+        setBarcode("")
     }
 
     function cancelAction()
@@ -393,7 +307,6 @@ function Return(props) {
                 <label id="barcodeScan" hidden>
                     <CameraAltIcon fontSize="large" sx={{color: "#404040"}} />
                     <span>
-                    <input type="file" id="barcodeScanInput" accept="image/*" capture="environment" onChange={(e) => imageCaptured(e)} />
                     </span>
                 </label>
                 <label id="manualInput">
