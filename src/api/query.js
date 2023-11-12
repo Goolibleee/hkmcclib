@@ -104,5 +104,6 @@ export const SERVER_QUERY = gql`
             globalIp
             localIp
             port
+            proxy
         }
     }`;

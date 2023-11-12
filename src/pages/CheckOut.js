@@ -58,7 +58,7 @@ function CheckOut(props) {
             {
                 const url = "https://" + ipAddr + ":" +
                     portNum + "/scanBarcode";
-                const response = await props.doc.requestGet(url);
+                const response = await props.doc.requestGet(url, {});
                 const code = response.data.scan;
                 if (code) {
                     console.log(code)

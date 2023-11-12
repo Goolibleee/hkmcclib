@@ -118,7 +118,7 @@ class Doc {
         }
 
 
-        console.log(this.serverInfo.globalIp);
+        console.log(this.serverInfo);
         this.checkServerIp()
     }
 

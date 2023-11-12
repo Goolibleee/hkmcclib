@@ -43,7 +43,7 @@ function Return(props) {
             {
                 const url = "https://" + ipAddr + ":" +
                     portNum + "/scanBarcode";
-                const response = await props.doc.requestGet(url);
+                const response = await props.doc.requestGet(url, {});
                 const book = response.data.scan;
                 if (book) {
                     console.log(book.search("HK"))
