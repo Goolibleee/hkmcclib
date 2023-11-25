@@ -203,7 +203,7 @@ background-color: white;
     border: hidden;
 }
 
-#searchInput, #searchPassword, #logIn, #logOutButton, #confirm, #cancel, #checkRent, #checkReturn, #idPrefix {
+#searchInput, #userInput, #bookInput, #searchPassword, #logIn, #logOutButton, #confirm, #cancel, #checkRent, #checkReturn, #idPrefix {
     width: 100%;
     font-size: 1.1rem;
     border: 2px solid lightgray;
@@ -474,6 +474,10 @@ td.content {
     padding: 10px;
     text-align: left;
     white-space: pre-line;
+}
+
+.rentHistory {
+    margin-top: 20px;
 }
 
 #page {

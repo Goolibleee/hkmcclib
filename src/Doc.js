@@ -25,7 +25,7 @@ class Doc {
         param.os = navigator.platform;
         const obj = {"params": param};
         console.log("Request GET : " + url);
-        console.log(obj);
+//        console.log(obj);
         const response = await axios.get(url, obj);
         return response;
     }
@@ -34,7 +34,7 @@ class Doc {
     {
         console.log("Request POST: " + url);
         param.os = navigator.platform;
-        console.log(param);
+//        console.log(param);
         const response = await axios.post(url, param);
 
         return response;
@@ -56,6 +56,7 @@ class Doc {
     {
         if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
             return;
+//        return;
         if (this.serverInfo.globalIp === this.ipAddr)
         {
             console.log("Server is accessible " + this.serverInfo.localIp);

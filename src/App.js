@@ -210,7 +210,7 @@ function App() {
                 <Route path="/search/:id?" element={<Search doc={doc} text={textString}/>} />
                 <Route path="/checkOutStatus" element={<CheckOutStatus context={context} doc={doc} text={textString} logged={logged}/>} />
                 <Route path="/userSearch/:id?" element={<UserSearch context={context} doc={doc} text={textString} />} />
-                <Route path="/checkOut" element={<CheckOut context={context} doc={doc} text={textString}/>} />
+                <Route path="/checkOut/:id?" element={<CheckOut context={context} doc={doc} text={textString}/>} />
                 <Route path="/return" element={<Return context={context} doc={doc} text={textString}/>} />
                 <Route path="/rentalSituation" element={<RentalSituation context={context} doc={doc} text={textString}/>} />
                 <Route path="/rentHistory" element={<RentHistory context={context} doc={doc} text={textString}/>} />

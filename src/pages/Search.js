@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./Page.css"
 import { useDebounce } from "use-debounce";
+import { useLazyQuery } from "@apollo/client";
 import { MAX_SEARCH_ENTRY, getBookState, toUtf8 } from "../Util";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import {HISTORY_BOOK_QUERY} from "../api/query.js";
 import ListView from "../ListView";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
@@ -11,22 +13,18 @@ let initialized = false;
 
 function Search(props) {
     const [inputText, setInputText] = useState("");
-    const [searchQuery] = useDebounce(inputText, 300);
     const [searchResults, setSearchResults] = useState([]);
     const [selectedId, setSelectedId] = useState(0);
-    const selectedRef = useRef("0");
 
     const [bookList, setBookList] = useState([]);
     const [rentList, setRentList] = useState([]);
 
     const [bookState, setBookState] = useState(0);
-    const bookStateRef = useRef(0);
     const [needConfirm, setNeedConfirm] = useState(false);
-    const needConfirmRef = useRef(false);
 
     const [queryRequest, toggleQueryRequest] = useState(false);
 
-    const { id } = useParams();
+    const [bookId, setBookId] = useState("");
 
     const [advancedSearch, setAdvancedSearch] = useState(false);
 
@@ -37,6 +35,17 @@ function Search(props) {
     const [toDate, setToDate] = useState("");
 
     const [stateFilter, setStateFilter] = useState(0);
+    const [rentHistory, setRentHistory] = useState([]);
+
+    const [searchQuery] = useDebounce(inputText, 300);
+    const [loadHistory, {data: historyData}] = useLazyQuery(HISTORY_BOOK_QUERY,
+            {"variables": { "book_id": bookId }});
+    const selectedRef = useRef("0");
+    const needConfirmRef = useRef(false);
+    const bookStateRef = useRef(0);
+    const historyAvailable = useRef(false);
+    const { id } = useParams();
+
 
     useEffect(function () {
         async function initialize() {
@@ -59,13 +68,17 @@ function Search(props) {
             console.log("Updated id: " + id);
             if (id)
             {
-                setInputText(id);
+                console.log("Set Book ID " + id);
+ //               setInputText(id);
+                setBookId(id);
+                loadHistory();
             }
             else
             {
-                setInputText("");
+//                setInputText("");
+                setBookId("");
             }
-        }, [id]
+        }, [id, loadHistory]
     );
 
     useEffect(
@@ -118,7 +131,7 @@ function Search(props) {
                 }
                 else
                 {
-                    results = findBookLocally(bookList);
+                    results = findBookLocally(text, bookList);
                 }
                 results.sort(function(a,b) { return a['text'] > b['text']; });
                 return results;
@@ -128,8 +141,14 @@ function Search(props) {
                 if (advancedSearch) {
                     return;
                 }
-                if (searchQuery) {
-                    let sr = await findBooks(searchQuery);
+                var keyword;
+                if (bookId !== "")
+                    keyword = bookId;
+                else
+                    keyword = searchQuery;
+                console.log(keyword)
+                if (keyword) {
+                    let sr = await findBooks(keyword);
                     if (sr.length > 0)
                         setSearchResults(sr);
                     else
@@ -142,7 +161,37 @@ function Search(props) {
             }
             query();
         },
-        [searchQuery, bookList, rentList, props, queryRequest, advancedSearch]
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [searchQuery, bookId, bookList, rentList, props, queryRequest, advancedSearch]
+    );
+    useEffect(
+        () => {
+            console.log("History update");
+            console.log(historyData);
+            if (!historyData)
+            {
+                setRentHistory([])
+                historyAvailable.current = false;
+                return;
+            }
+            let history = [];
+            for (let i = 0 ; i < historyData.rentLogs.length ; i++)
+            {
+                const rent = historyData.rentLogs[i];
+                if (rent.book_state !== 1)
+                    continue;
+                let pair = [rent.timestamp];
+                if ( "return_date" in rent)
+                    pair.push(rent.return_date)
+                else
+                    pair.push(rent.return_date)
+                history.push(pair);
+            }
+            console.log(history.length);
+            setRentHistory(history);
+            historyAvailable.current = (history.length > 0);
+        },
+        [historyData]
     );
 
     async function updateDoc()
@@ -162,7 +211,6 @@ function Search(props) {
 
         let bl = [];
         const books = props.doc.book
-        var lastKey;
         for (const key in books)
         {
            const book = books[key];
@@ -170,17 +218,22 @@ function Search(props) {
            bl.push({code: book._id, name: book.title, state: state, num: book.num, author: book.author, claim: book.claim,
                     regDate: book.registration_date,
                     claim_num: book.claim_num, totalName: book.series, category: book.publisher, publish: book.publisher, isbn: book.isbn});
-            lastKey = key;
         }
-        console.log(books[lastKey])
         console.log("Load");
-        console.log(books.length);
+        console.log(bl.length);
         setBookList(bl);
+
+        console.log(bookId);
+        if (bookId !== "")
+        {
+            console.log("Load history");
+            loadHistory();
+        }
     }
 
     const selectId = async (code) => {
         console.log("Prev " + selectedRef.current);
-        if (selectedRef.current === -1 || selectedRef.current !== code)
+        if (searchResults.length === 1 || selectedRef.current === -1 || selectedRef.current !== code)
         {
             console.log("Select " + code);
             setSelectedId(code);
@@ -268,40 +321,54 @@ function Search(props) {
         setNeedConfirm(false);
     }
 
-    const showEntry = (result) => {
+    const showHistoryEntry = (entry) => {
+        return (<tr key={entry[0]}><td key={entry[0] + "x"}>{entry[0]}</td><td>{entry[1]}</td></tr>);
+    }
+
+    const showEntry = (result, detail) => {
         const hidden = (result.code !== selectedRef.current);
         const entryId = (hidden) ? "searchResult" : "selectedSearchResult";
         const flags = [false, false, false, false, false, false, false, false, false, false]
         flags[result.state] = true;
         if (result.state === 1 || result.state === 2 || result.state === 3)
             flags[0] = true;
-        if (!hidden)
-            console.log(flags)
+//        if (!hidden)
+//        {
+//            console.log(detail);
+//            console.log(flags);
+//        }
+        const rentHistory = detail[2];
         return (
             <div key={result.code}>
             <div id={entryId} onClick={async () => await selectId(result.code)}>
                 <table><tbody>
                     <tr className="searchTr">
-                        <td className="searchTitle"> {result.text}</td>
-                        <td className="searchRent"> {result.rent} </td>
+                        <td className="searchTitle">{result.text}</td>
+                        <td className="searchRent">{result.rent}</td>
                     </tr>
                 </tbody></table>
             </div>
             {!hidden &&
             <div>
                 <table><tbody>
-                <tr>
+                <tr key="row1">
                     <td>{result.author} </td>
-                    <td colSpan="2" rowSpan="2">{result.totalName} <b>{result.name}</b> { result.claim_num} </td>
+                    <td colSpan="2" rowSpan="2">{result.totalName}<b>{result.name}</b>{ result.claim_num}</td>
                 </tr>
-                <tr>
-                    <td>{result.code} </td>
+                <tr key="row2">
+                    <td>
+                        <Link to={"/search/"+result.code}>{result.code}</Link>
+                    </td>
                 </tr>
-                <tr>
+                <tr key="row3">
                     <td>{result.publish}</td>
-                    <td colSpan={result.retDate.length > 0 ? "1":"2"}>{result.claim} </td>
+                    <td colSpan={result.retDate.length > 0 ? "1":"2"}>{result.claim}</td>
                     {result.retDate.length > 0 && <td>{result.retDate}</td> }
                 </tr>
+                </tbody></table>
+                <table className="rentHistory" hidden={!historyAvailable.current}><tbody>
+                    <tr id="titles"><td>{props.text.rentDate}</td><td>{props.text.returnDate}</td></tr>
+                    {rentHistory.map(entry => showHistoryEntry(entry))}
                 </tbody></table>
                 <div hidden={!props.doc.serverAvailable || !props.doc.admin}>
                     <button className="bookStates" id = "0" disabled={flags[0]} onClick={() => setState(0)}> {props.text.available} </button>
@@ -322,10 +389,12 @@ function Search(props) {
         );
     }
 
-    function showEntries(results)
+    function showEntries(results, detail)
     {
         console.log("Redraw " + needConfirmRef.current);
-        return results.map((result) => showEntry(result))
+        console.log(historyAvailable.current);
+        console.log(detail);
+        return results.map((result) => showEntry(result, detail))
     }
 
     function setPeriod(from, text)
@@ -336,7 +405,7 @@ function Search(props) {
             setToId(text)
     }
 
-    function findBookLocally(bookList)
+    function findBookLocally(keyword, bookList)
     {
         let results = [];
         console.log(advancedSearch);
@@ -344,7 +413,7 @@ function Search(props) {
             const row = bookList[i];
             if (results.length >= MAX_SEARCH_ENTRY) break;
 
-            const text = inputText;
+            const text = keyword;
             if (text.length > 0 && row.name && !row.name.toString().includes(text) &&
                 row.code !== text && row.isbn !== text)
                 continue
@@ -368,10 +437,10 @@ function Search(props) {
                 console.log(regDate < fromDate);
                 console.log(regDate > toDate);
 
-                if (!(1<<(row.state) & stateFilter))
+                if (!((1<<row.state) & stateFilter))
                     continue;
             }
-            else if (text.length == 0)
+            else if (text.length === 0)
                 continue;
 
             let resultString = `${row.name} ${row.claim_num}`;
@@ -440,7 +509,7 @@ function Search(props) {
         console.log(toId);
         console.log(fromDate);
         console.log(toDate);
-        let results = findBookLocally(bookList);
+        let results = findBookLocally(inputText, bookList);
         results.sort(function(a,b) { return a['code'] > b['code']; });
 
         let sr = results;
@@ -462,7 +531,7 @@ function Search(props) {
             <div id="title">
                 <h2> {props.text.bookSearch} </h2>
             </div>
-            <div id="searchContents">
+            <div id="searchContents" hidden={bookId !== ""}>
                 <input id="searchInput"
                     placeholder={props.text.searchBook}
                     value={inputText}
@@ -488,20 +557,20 @@ function Search(props) {
                     </div>
                     <div>
                     <label> {props.text.registeredDate} </label>
-                    <Calendar onChange={onChangeDate} selectRange="true"/>
+                    <Calendar onChange={onChangeDate} selectRange={true}/>
                     </div>
                     <div>
                     <table><tbody>
                         <tr key="stateName" className="bookData">
-                            <td className ="stateName"> {props.text.all} </td>
-                            <td className ="stateName"> {props.text.available} </td>
-                            <td className ="stateName"> {props.text.checkedOut} </td>
-                            <td className ="stateName"> {props.text.overDue} </td>
-                            <td className ="stateName"> {props.text.lost} </td>
-                            <td className ="stateName"> {props.text.damaged} </td>
-                            <td className ="stateName"> {props.text.given} </td>
-                            <td className ="stateName"> {props.text.notAvailable} </td>
-                            <td className ="stateName"> {props.text.deleted} </td>
+                            <td className ="stateName">{props.text.all}</td>
+                            <td className ="stateName">{props.text.available}</td>
+                            <td className ="stateName">{props.text.checkedOut}</td>
+                            <td className ="stateName">{props.text.overDue}</td>
+                            <td className ="stateName">{props.text.lost}</td>
+                            <td className ="stateName">{props.text.damaged}</td>
+                            <td className ="stateName">{props.text.given}</td>
+                            <td className ="stateName">{props.text.notAvailable}</td>
+                            <td className ="stateName">{props.text.deleted}</td>
                         </tr>
                         <tr key="stateButton" className="bookData">
                             <td className ="stateButton">
@@ -539,7 +608,7 @@ function Search(props) {
                     </div>
                 </div>
             </div>
-            <ListView keyValue={searchQuery} list={searchResults} detail={selectedId + needConfirm} showCallback={(entries, detail) => { return showEntries(entries); }}/>
+            <ListView keyValue={searchQuery} list={searchResults} detail={[selectedId, needConfirm, rentHistory]} showCallback={(entries, detail) => { return showEntries(entries, detail); }}/>
         </div>
     );
 }

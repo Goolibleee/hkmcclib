@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
 import { toastProp, MAX_SEARCH_ENTRY, getUserState, toUtf8 } from "../Util";
 import { useLazyQuery } from "@apollo/client";
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { useNavigate, Link, Navigate, useParams } from 'react-router-dom'
 import {USERS_QUERY} from "../api/query.js";
 //import {USERS_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
@@ -24,6 +24,7 @@ function CheckOut(props) {
     const selectedRef = useRef("0");
     const { id } = useParams();
     const [rentList, setRentList] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(function () {
         async function initialize() {
@@ -241,7 +242,10 @@ function CheckOut(props) {
         console.log(user);
         return (<>
                     {props.doc.serverAvailable &&
+                        <div>
                         <UserInfo text={props.text} doc={props.doc} info={user} refresh={refresh}/>
+                        <button id="modify" onClick={() => navigate("/checkOut/" + user.USER_CODE)}> {props.text.checkOut} </button>
+                        </div>
                     }
                     <table><tbody>
                     <tr key="ID">

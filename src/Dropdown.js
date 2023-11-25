@@ -31,7 +31,7 @@ function DropDown(props) {
                menu.classList.add('is-show');
             }
 
-        }, [props.dropdown, dropdown, click, props.doc.logged]
+        }, [props.dropdown, dropdown, click, props.doc.logged, props.doc.serverAvailable]
     );
 
     const logOut = () =>

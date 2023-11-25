@@ -104,8 +104,8 @@ function Return(props) {
     );
 */
 
-    useEffect(
-        async () => {
+    useEffect(() => {
+        async function setBookId() {
             if (bookText.length > 0)
             {
                 var bookId;
@@ -125,12 +125,12 @@ function Return(props) {
                     setScannedBook(book.books)
                 }
             }
-        },
-        [searchQuery, props.doc]
-    );
+        }
+        setBookId();
+    }, [searchQuery, props.doc, bookText]);
 
-    useEffect(
-        async () => {
+    useEffect(() => {
+        async function setBarcode()  {
             console.log("B" + barcode);
             if (barcode.length > 0)
             {
@@ -147,10 +147,11 @@ function Return(props) {
                     setScannedBook(book.books)
                 }
             }
-        },
-        [barcode, props.doc]
-    );
+        }
+        setBarcode();
+    }, [barcode, props.doc]);
 
+/*
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -159,6 +160,7 @@ function Return(props) {
             reader.onerror = error => reject(error);
         });
     }
+*/
 
     useEffect(
         () => {
@@ -226,7 +228,7 @@ function Return(props) {
             const param = {"books": returned};
             props.doc.requestGet(url, param);
         },
-        [returned]
+        [returned, bookText, props.doc]
     );
 
     async function confirmAction()

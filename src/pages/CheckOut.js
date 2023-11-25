@@ -3,9 +3,9 @@ import "./Page.css"
 import { toast } from "react-toastify";
 import { toastProp, loggingId, loadingId, getUserState } from "../Util";
 import { useDebounce } from "use-debounce";
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
+//import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ListView from "../ListView";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const State = {
     LoggedOut: 0,
@@ -15,17 +15,25 @@ const State = {
 }
 
 function CheckOut(props) {
-    const [userText, setUserText] = useState("");
-    const [bookText, setBookText] = useState("");
-    const [searchQuery] = useDebounce(bookText, 300);
     const [userId, setUserId] = useState("");
-    const [state, setState] = useState(State.LoggedOut);
-    const [userData, setUserData] = useState({});
-    const [scannedBook, setScannedBook] = useState({});
+
+    const [bookText, setBookText] = useState("");
+    const [bookValue] = useDebounce(bookText, 500);
+    const [bookId, setBookId] = useState("");
+
     const [needConfirm, setNeedConfirm] = useState(false);
-    const [notifyRequest, setNotifyRequest] = useState({});
+
     const [barcode, setBarcode] = useState("");
+
+    const [notifyRequest, setNotifyRequest] = useState({});
+
     const [rented, setRented] = useState([]);
+    const [userData, setUserData] = useState({});
+    const [bookData, setBookData] = useState({});
+    const [state, setState] = useState(State.LoggedOut);
+
+    const { id } = useParams();
+
     const navigate = useNavigate();
 
     useEffect(function () {
@@ -33,15 +41,21 @@ function CheckOut(props) {
             console.log("=======================================");
             console.log("CheckOut initialize");
             const prefixList = document.getElementsByName("idPrefix");
-            const prefix = barcode.substring(0, 2);
             for (var i = 0 ; i < prefixList.length ; i++)
             {
-                const id = prefixList[i].id
-                if ("AB" === id)
+                const prefix = prefixList[i].id
+                if ("AB" === prefix)
                     prefixList[i].checked = true
                 else
                     prefixList[i].checked = false
 
+            }
+            console.log("ID: " + id);
+            if (id && id.length !== 0)
+            {
+//                setBarcode(id)
+                setUserId(id);
+                logIn(id);
             }
         }
 
@@ -62,6 +76,7 @@ function CheckOut(props) {
                 const code = response.data.scan;
                 if (code) {
                     console.log(code)
+                    console.log(state)
                     setBarcode(code)
                 }
             }
@@ -74,6 +89,26 @@ function CheckOut(props) {
 
     useEffect(
         () => {
+            console.log("Updated id: " + id);
+        }, [id]
+    );
+
+    useEffect(
+        () => {
+            if (!barcode)
+                return;
+            console.log("Updated barcode: " + barcode);
+            console.log("state : " + state);
+            if (state === State.LoggedIn)
+                setBookId(barcode);
+            else if (state === State.LoggedOut)
+                logIn(barcode);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [barcode]
+    );
+
+    useEffect(
+        () => {
             console.log("User data updated ");
             console.log(toast.isActive(loggingId));
             const prop = toastProp;
@@ -82,6 +117,7 @@ function CheckOut(props) {
             let notify = false;
             if ("USER_CODE" in userData && state !== State.LoggedIn)
             {
+                console.log("Set state to LoggedIn from " + state);
                 setState(State.LoggedIn);
 
                 prop.type = toast.TYPE.SUCCESS;
@@ -90,7 +126,7 @@ function CheckOut(props) {
             }
             else if (!("USER_CODE" in userData))
             {
-                setState(State.LoggedOut);
+                console.log("Set state to LoggedOut from " + state);
 
                 if (state === State.LoggingIn)
                 {
@@ -98,6 +134,7 @@ function CheckOut(props) {
                     text = props.text.logInFail;
                     notify = true;
                 }
+                setState(State.LoggedOut);
             }
 
             if (notify)
@@ -114,9 +151,9 @@ function CheckOut(props) {
     useEffect(
         () => {
             console.log("book updated ");
-            if ("BARCODE" in scannedBook)
+            if ("BARCODE" in bookData)
             {
-                if (scannedBook._STATE === 0)
+                if (bookData._STATE === 0)
                 {
                     setNeedConfirm(true);
                 }
@@ -131,11 +168,12 @@ function CheckOut(props) {
             else
             {
                 setNeedConfirm(false);
-                setBarcode("")
+//                setBarcode("")
+                setBookId("");
             }
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [scannedBook]
+        [bookData]
     );
 
     useEffect(
@@ -162,30 +200,34 @@ function CheckOut(props) {
         [notifyRequest]
     );
 
+/*
     useEffect(
         () => {
-            if (state !== State.LoggedIn)
+            if (state === State.LoggedIn)
+                return;
+
+            const prefixList = document.getElementsByName("idPrefix");
+            var prefix = ""
+            for (var i = 0 ; i < prefixList.length ; i++)
             {
-                const prefixList = document.getElementsByName("idPrefix");
-                var prefix = ""
-                for (var i = 0 ; i < prefixList.length ; i++)
-                {
-                    if (prefixList[i].checked)
-                        prefix = prefixList[i].id
-                        console.log("Pressed [" + i.toString() + " " + prefix + "]")
+                if (prefixList[i].checked)
+                    prefix = prefixList[i].id
+                    console.log("Pressed [" + i.toString() + " " + prefix + "]")
 
-                }
-                let barcode;
-                if (userText[0] === "A" || userText[0] == "a")
-                    barcode = userText;
-                else
-                    barcode = prefix + userText;
-                setBarcode(barcode);
             }
-        }, [state, userText]
-    );
+            let _userId;
+            if (userValue[0] === "A" || userValue[0] === "a")
+                _userId = userValue;
+            else
+                _userId = prefix + userValue;
+//                setBarcode(_userId);
+            setUserId(_userId);
 
-    const updateUser = async (userText) => {
+        }, [state, userValue]
+    );
+*/
+
+    const getUserData = async (userText) => {
         const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/user?user=" + userText;
         const param = {"user": userText, "data":"nothing"};
         const response = await props.doc.requestGet(url, param);
@@ -196,26 +238,66 @@ function CheckOut(props) {
         setUserId(user.USER_CODE);
     }
 
-    const logIn = async () => {
+    const logIn = async (inputId = undefined) => {
+        var userId;
+        var prefix = "";
+        var i;
+        const prefixList = document.getElementsByName("idPrefix");
+        if (inputId)
+        {
+            if (inputId.length <= 2)
+                return;
+            prefix = inputId.substring(0, 2);
+            var found = false;
+            for (i = 0 ; i < prefixList.length ; i++)
+            {
+                if (prefix === prefixList[i].id)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return;
+            userId = inputId;
+        }
+        else
+        {
+            const userValue = document.getElementById('userInput').value;
+            for (i = 0 ; i < prefixList.length ; i++)
+            {
+                if (prefixList[i].checked)
+                    prefix = prefixList[i].id
+                    console.log("Pressed [" + i.toString() + " " + prefix + "]")
+
+            }
+            if (userValue[0] === "A" || userValue[0] === "a")
+                userId = userValue;
+            else
+                userId = prefix + userValue;
+        }
         console.log("LOGIN");
-        console.log(barcode);
-        if (barcode.length === 0)
+        console.log(userId);
+        if (userId.length === 0)
             return;
+        console.log("Set state to LoggingIn from " + state );
         setState(State.LoggingIn);
-        const id = barcode.toUpperCase();
-        updateUser(id);
+        const _id = userId.toUpperCase();
+        getUserData(_id);
     }
 
     const logOut = async () => {
         console.log("Finish")
         setUserData({});
-        setUserText("");
-        setScannedBook({});
-        setBarcode("")
+        setBookData({});
+//        setBarcode("");
+        setUserId("");
+        setBookId("");
         setRented([])
         navigate("/")
     }
 
+/*
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -224,86 +306,87 @@ function CheckOut(props) {
             reader.onerror = error => reject(error);
         });
     }
+*/
 
-    useEffect(
-        async () => {
-            if (bookText.length > 0)
-            {
-                var bookId;
-                if (props.doc.admin)
-                    bookId = bookText;
-                else
-                    bookId = "HK" + bookText;
-                console.log("Search book1 " + bookId);
-                const url = "https://" + props.doc.serverInfo.localIp + ":" +
-                    props.doc.serverInfo.port + "/book";
-//                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
-                const param = {"book": bookId, "match": true};
-                const response = await props.doc.requestGet(url, param);
-                const book = response.data.return;
-                console.log(book)
-//                        if ('BOOKNAME' in book)
-                if ('books' in book && 'BOOKNAME' in book.books)
-                {
-                    console.log(book.books)
-                    setScannedBook(book.books)
-                }
-            }
-        },
-        [searchQuery, props.doc]
-    );
-
-    useEffect(
-        async () => {
-            console.log("Set barcode: " + barcode);
-            if (barcode.length === 0)
+    useEffect(() => {
+        async function setBookValue() {
+            if (bookValue.length <= 0)
                 return;
-            if (state !== State.LoggedIn)
+            var _bookId;
+            if (props.doc.admin)
+                _bookId = bookValue;
+            else
+                _bookId = "HK" + bookValue;
+            console.log("Search book1 " + _bookId);
+            const url = "https://" + props.doc.serverInfo.localIp + ":" +
+                props.doc.serverInfo.port + "/book";
+//                const obj = {"params": {"book": btoa(toUtf8(_bookId)), "match": true}};
+            const param = {"book": _bookId, "match": true};
+            const response = await props.doc.requestGet(url, param);
+            const book = response.data.return;
+            console.log(book)
+//                        if ('BOOKNAME' in book)
+            if ('books' in book && 'BOOKNAME' in book.books)
             {
-                if (barcode.search("AA") === 0 || barcode.search("AB") === 0 )
-                {
-                    const prefixList = document.getElementsByName("idPrefix");
-                    const prefix = barcode.substring(0, 2);
-                    for (var i = 0 ; i < prefixList.length ; i++)
-                    {
-                        const id = prefixList[i].id
-                        if (prefix === id)
-                            prefixList[i].checked = true
-                        else
-                            prefixList[i].checked = false
+                console.log(book.books)
+                setBookData(book.books)
+            }
+        }
+        setBookValue()
+    }, [bookValue, props.doc]);
 
-                    }
-                    setUserText(barcode.substring(2));
-                }
-            }
-            else if (barcode.search("HK") === 0)
-            {
-                const bookId = barcode;
-                console.log("Search book2 " + bookId);
-                const url = "https://" + props.doc.serverInfo.localIp + ":" +
-                    props.doc.serverInfo.port + "/book";
+    useEffect(() => {
+        async function setBookId() {
+            console.log("Set bookId: " + bookId);
+            if (bookId.length === 0)
+                return;
+            console.log("Search book2 " + bookId);
+            const url = "https://" + props.doc.serverInfo.localIp + ":" +
+                props.doc.serverInfo.port + "/book";
 //                const obj = {"params": {"book": btoa(toUtf8(bookId)), "match": true}};
-                const param = {"book": bookId, "match": true};
-                const response = await props.doc.requestGet(url, param);
-                const book = response.data.return;
-                console.log(book)
-                if ('books' in book && 'BOOKNAME' in book.books)
+            const param = {"book": bookId, "match": true};
+            const response = await props.doc.requestGet(url, param);
+            const book = response.data.return;
+            console.log(book)
+            if ('books' in book && 'BOOKNAME' in book.books)
+            {
+                setBookData(book.books)
+            }
+        }
+        setBookId();
+    }, [bookId, props.doc]);
+
+    useEffect(() => {
+        async function setUserId() {
+            console.log("Set userId: " + userId);
+            if (!userId || userId.length === 0)
+                return;
+            if (userId.search("AA") === 0 || userId.search("AB") === 0 )
+            {
+                const prefixList = document.getElementsByName("idPrefix");
+                const prefix = userId.substring(0, 2);
+                for (var i = 0 ; i < prefixList.length ; i++)
                 {
-                    setScannedBook(book.books)
+                    const id = prefixList[i].id
+                    if (prefix === id)
+                        prefixList[i].checked = true
+                    else
+                        prefixList[i].checked = false
+
                 }
             }
-        },
-        [barcode, props.doc, state]
-    );
+        }
+    setUserId();
+    }, [userId]);
 
     async function confirmAction()
     {
         console.log("Confirmed");
         setNeedConfirm(false);
-        console.log(scannedBook);
+        console.log(bookData);
         const url = "https://" + props.doc.serverInfo.localIp + ":" + props.doc.serverInfo.port + "/checkOut"
         const param = {
-            book: scannedBook.BARCODE,
+            book: bookData.BARCODE,
             user: userId
         };
         const response = await props.doc.requestPost(url, param);
@@ -316,7 +399,7 @@ function CheckOut(props) {
             setNotifyRequest({"id": loadingId,
                               "text": props.text.rentSucceed,
                               "type": toast.TYPE.SUCCESS})
-            rented.push({"id": scannedBook.BARCODE, "name": scannedBook.BOOKNAME})
+            rented.push({"id": bookData.BARCODE, "name": bookData.BOOKNAME})
             console.log(rented)
             setRented(rented)
         }
@@ -332,9 +415,10 @@ function CheckOut(props) {
                               "text": text,
                               "type": toast.TYPE.ERROR})
         }
-        setScannedBook({});
-        setBarcode("")
-        updateUser(userId);
+        setBookData({});
+//        setBarcode("");
+        setBookId("");
+        getUserData(userId);
     }
 
     function showEntry(index, rent)
@@ -374,8 +458,19 @@ function CheckOut(props) {
     {
         console.log("Cancelled")
         setNeedConfirm(false);
-        setScannedBook({});
-        setBarcode("")
+        setBookData({});
+//        setBarcode("")
+        setBookId("");
+    }
+
+    function setUserKeyDown(event)
+    {
+        if (event.key === "Enter")
+        {
+            console.log(event);
+            console.log(document.getElementById('userInput').value);
+            logIn();
+        }
     }
 
 //            <div id="checkOutResult" hidden={state !== State.LoggedIn ? true : false }>
@@ -392,12 +487,11 @@ function CheckOut(props) {
                 <label htmlFor="AA" className="idPrefix" name="idPrefix"> AA </label>
                 <input type="radio" id = "AB" name="idPrefix"/>
                 <label htmlFor="AB" className="idPrefix" name="idPrefix"> AB </label>
-                <input type="text" id="searchInput" pattern="[0-9]*" inputMode="numeric"
+                <input type="text" id="userInput" pattern="[0-9]*" inputMode="numeric"
                     placeholder={props.text.idHolder}
-                    value={userText}
-                    onInput={(event) => {
-                        setUserText(event.target.value);
-                    }} />
+                    onKeyDown={(event) => {
+                        setUserKeyDown(event);
+                    }}/>
                <button id="logIn" onClick={async () => logIn()}> {props.text.logIn} </button>
             </div>
             <div id="checkOutResult" hidden={state !== State.LoggedIn}>
@@ -415,7 +509,7 @@ function CheckOut(props) {
                         <div id="hkPrefix">
                         {props.text.numberOnly}
                         </div>
-                        <input inputMode="numeric" pattern="[0-9]*" type="text" id="searchInput"
+                        <input inputMode="numeric" pattern="[0-9]*" type="text" id="bookInput"
                             placeholder={props.text.bookHolder}
                             onInput={(event) => {
                                 setBookText(event.target.value);
@@ -424,8 +518,8 @@ function CheckOut(props) {
                 </div>
                 <div id="checkRent" hidden={!needConfirm}>
                     <div id="bookName"> {props.text.confirmRent} </div>
-                    <div id="bookName"> {scannedBook.AUTHOR + ":"} </div>
-                    <div id="bookName"> {scannedBook.BOOKNAME} </div>
+                    <div id="bookName"> {bookData.AUTHOR + ":"} </div>
+                    <div id="bookName"> {bookData.BOOKNAME} </div>
                     <button id="confirm" onClick={async () => confirmAction()}> {props.text.confirm} </button>
                     <button id="cancel" onClick={() => cancelAction()}> {props.text.cancel} </button>
                 </div>
