@@ -133,7 +133,7 @@ function Search(props) {
                 {
                     results = findBookLocally(text, bookList);
                 }
-                results.sort(function(a,b) { return a['text'] > b['text']; });
+                results.sort(compareBook);
                 return results;
             }
             async function query() {
@@ -193,6 +193,20 @@ function Search(props) {
         },
         [historyData]
     );
+
+    function compareBook(book1, book2)
+    {
+        if (book1.name > book2.name)
+            return true;
+        else if (book1.name < book2.name)
+            return false
+        const claim1 = parseInt(book1.claim_num);
+        const claim2 = parseInt(book2.claim_num);
+        if (claim1 > claim2)
+            return true
+        else
+            return false
+    }
 
     async function updateDoc()
     {
@@ -353,7 +367,7 @@ function Search(props) {
                 <table><tbody>
                 <tr key="row1">
                     <td>{result.author} </td>
-                    <td colSpan="2" rowSpan="2">{result.totalName}<b>{result.name}</b>{ result.claim_num}</td>
+                    <td colSpan="2" rowSpan="2">{result.totalName + " "}<b>{result.name}</b>{" " + result.claim_num}</td>
                 </tr>
                 <tr key="row2">
                     <td>
@@ -414,7 +428,9 @@ function Search(props) {
             if (results.length >= MAX_SEARCH_ENTRY) break;
 
             const text = keyword;
-            if (text.length > 0 && row.name && !row.name.toString().includes(text) &&
+            if (text.length > 0 &&
+                (!row.name || !row.name.toString().includes(text)) &&
+                (!row.totalName || !row.totalName.toString().includes(text)) &&
                 row.code !== text && row.isbn !== text)
                 continue
             if (advancedSearch)
