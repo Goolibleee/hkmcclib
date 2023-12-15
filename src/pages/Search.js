@@ -120,7 +120,7 @@ function Search(props) {
                             regDate: book.REG_DATE,
                             author: book.AUTHOR,
                             totalName: book.TOTAL_NAME,
-                            claim_num: book.CLAMENUM,
+                            claim_num: book.CLAIMNUM,
                             publish: book.PUBLISH,
                             claim: book.CLAIM,
                             state: book._STATE,

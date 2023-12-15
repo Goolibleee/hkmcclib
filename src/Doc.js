@@ -129,7 +129,8 @@ class Doc {
         {
             const book = books[i];
             const id = book['_id'];
-            this.book[id] = book;
+            this.book[id] = {...book};
+            this.book[id].claim = book.claim.replace(/_/g, " ");
         }
         this.bookReady = true;
         this.checkState();
