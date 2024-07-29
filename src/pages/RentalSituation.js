@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { getUserState } from "../Util";
 import { useLazyQuery } from "@apollo/client";
-import { getBookState } from "../Util";
+import { getBookState, compareRent } from "../Util";
 import { Link, Navigate } from 'react-router-dom'
 import {USERS_QUERY} from "../api/query.js";
 //import {USERS_QUERY} from "../api/query_test.js";
@@ -67,11 +67,6 @@ function RentHistory(props) {
         [userList]
     );
 
-    function compare(a1, a2)
-    {
-        return a1.rentDate > a2.rentDate;
-    }
-
     async function updateDoc()
     {
         console.log("All data loaded " + initialized);
@@ -115,7 +110,7 @@ function RentHistory(props) {
                 };
                 results.push(resultObject);
             }
-            results.sort(compare);
+            results.sort(compareRent);
             setRentList(results);
         }
         else
@@ -124,7 +119,7 @@ function RentHistory(props) {
             const rent = await props.doc.getRent();
             console.log("Rent");
             console.log(rent);
-            rent.sort(compare);
+            rent.sort(compareRent);
             for (const index in rent)
             {
                 const userId = rent[index]["user"];

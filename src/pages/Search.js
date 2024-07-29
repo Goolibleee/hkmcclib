@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import "./Page.css"
 import { useDebounce } from "use-debounce";
 import { useLazyQuery } from "@apollo/client";
-import { MAX_SEARCH_ENTRY, getBookState, toUtf8 } from "../Util";
+import { MAX_SEARCH_ENTRY, getBookState, toUtf8, compareBook } from "../Util";
 import { useParams, Link } from "react-router-dom";
 import {HISTORY_BOOK_QUERY} from "../api/query.js";
 import ListView from "../ListView";
@@ -194,20 +194,6 @@ function Search(props) {
         [historyData]
     );
 
-    function compareBook(book1, book2)
-    {
-        if (book1.name > book2.name)
-            return true;
-        else if (book1.name < book2.name)
-            return false
-        const claim1 = parseInt(book1.claim_num);
-        const claim2 = parseInt(book2.claim_num);
-        if (claim1 > claim2)
-            return true
-        else
-            return false
-    }
-
     async function updateDoc()
     {
         console.log("All data loaded " + initialized);
@@ -231,7 +217,7 @@ function Search(props) {
            const state = (key in rm) ? rm[key] : 0;
            bl.push({code: book._id, name: book.title, state: state, num: book.num, author: book.author, claim: book.claim,
                     regDate: book.registration_date,
-                    claim_num: book.claim_num, totalName: book.series, category: book.publisher, publish: book.publisher, isbn: book.isbn});
+                    claim_num: book.claim_num, totalName: book.series, category: book.publisher, publish: book.publisher, isbn: book.isbn, deleted: book.deleted});
         }
         console.log("Load");
         console.log(bl.length);
@@ -427,15 +413,20 @@ function Search(props) {
             const row = bookList[i];
             if (results.length >= MAX_SEARCH_ENTRY) break;
 
-            const text = keyword;
+            const text = keyword.toLowerCase();
             if (text.length > 0 &&
-                (!row.name || !row.name.toString().includes(text)) &&
-                (!row.totalName || !row.totalName.toString().includes(text)) &&
+                (!row.name || !row.name.toString().toLowerCase().includes(text)) &&
+                (!row.totalName || !row.totalName.toString().toLowerCase().includes(text)) &&
+                (!row.author || !row.author.toString().toLowerCase().includes(text)) &&
                 row.code !== text && row.isbn !== text)
                 continue
+            if (row.deleted && row.deleted === "Y")
+                continue
+            console.log(row)
+
             if (advancedSearch)
             {
-                if (author.length > 0 && row.author && !row.author.toString().includes(author))
+                if (author.length > 0 && row.author && !row.author.toString().toLowerCase().includes(author.toLowerCase()))
                     continue;
 
                 if (fromId.length > 0 && row.code < fromId)
@@ -526,7 +517,7 @@ function Search(props) {
         console.log(fromDate);
         console.log(toDate);
         let results = findBookLocally(inputText, bookList);
-        results.sort(function(a,b) { return a['code'] > b['code']; });
+        results.sort(compareBook);
 
         let sr = results;
         if (sr.length > 0)

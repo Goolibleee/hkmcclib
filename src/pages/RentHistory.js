@@ -178,15 +178,6 @@ function RentHistory(props) {
     );
 */
 
-    function compare(a1, a2)
-    {
-        if (a1.rentDate > a2.rentDate)
-            return true;
-        else if (a1.rentDate < a2.rentDate)
-            return false;
-        return a1.title > a2.title;
-    }
-
 /*
     async function updateDoc()
     {
@@ -313,7 +304,7 @@ function RentHistory(props) {
                     };
                     results.push(resultObject);
                 }
-                results.sort(compare);
+                results.sort(compareRent);
                 setRentList(results);
             }
             else

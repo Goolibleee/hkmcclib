@@ -43,21 +43,20 @@ class Doc {
     async updateIpAddr()
     {
 //        const response = await axios.get("https://ipv4.seeip.org/jsonip");
-        const response = await axios.get("https://api.ipify.org/?format=json")
+//        const response = await axios.get("https://api.ipify.org/?format=json")
         console.log("Get IP Address");
-        console.log(response.data);
-        const ipAddr = response.data.ip;
-        console.log("IP addr updated " + ipAddr)
-        this.ipAddr = ipAddr;
+//        console.log(response.data);
+//        const ipAddr = response.data.ip;
+//        console.log("IP addr updated " + ipAddr)
+//        this.ipAddr = ipAddr;
         this.checkServerIp()
     }
 
     checkServerIp()
     {
-        if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
-            return;
-//        return;
-        if (this.serverInfo.globalIp === this.ipAddr)
+//        if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
+//            return;
+//        if (this.serverInfo.globalIp === this.ipAddr)
         {
             console.log("Server is accessible " + this.serverInfo.localIp);
             const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
@@ -70,10 +69,6 @@ class Doc {
                     this.dueDate = response.data.dueDate;
                     this.initialized = true;
                 })
-                .catch(error => {
-                  const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
-                  window.open(query);
-                });
         }
     }
 

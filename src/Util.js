@@ -73,13 +73,44 @@ export const getBookState = function(text, state) {
     }
 }
 
+export const compareBook = function(book1, book2)
+{
+    if (book1.name > book2.name)
+        return 1;
+    else if (book1.name < book2.name)
+        return -1;
+    const claim1 = parseInt(book1.claim_num);
+    const claim2 = parseInt(book2.claim_num);
+    if (claim1 > claim2)
+        return 1;
+    else if (claim1 < claim2)
+        return -1;
+
+    return 0;
+}
+
+export const compareUser = function(a1, a2)
+{
+    if (a1.name > a2.name)
+        return 1;
+    else if (a1.name < a2.name)
+        return -1;
+    else
+        return 0;
+}
+
 export const compareRent = function(a1, a2)
 {
     if (a1.rentDate > a2.rentDate)
-        return true;
+        return 1;
     else if (a1.rentDate < a2.rentDate)
-        return false;
-    return a1.title > a2.title;
+        return -1;
+    if (a1.title > a2.title)
+        return 1;
+    else if (a1.title < a2.title)
+        return -1;
+    else
+        return 0;
 }
 
 export const toUtf8 = function(text) {

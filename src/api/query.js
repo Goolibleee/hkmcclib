@@ -15,6 +15,7 @@ export const BOOK_QUERY = gql`
             seqnum
             registration_date
             isbn
+            deleted
         }
     }
 `;

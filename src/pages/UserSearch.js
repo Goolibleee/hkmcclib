@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import "./Page.css"
 import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
-import { toastProp, MAX_SEARCH_ENTRY, getUserState, toUtf8 } from "../Util";
+import { toastProp, MAX_SEARCH_ENTRY, getUserState, toUtf8, compareUser } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { useNavigate, Link, Navigate, useParams } from 'react-router-dom'
 import {USERS_QUERY} from "../api/query.js";
@@ -279,7 +279,7 @@ function CheckOut(props) {
                         results.push(row);
                     }
                 }
-                results.sort(function(a,b) { return a.name > b.name; });
+                results.sort(compareUser);
                 console.log(results);
                 return results;
             }
