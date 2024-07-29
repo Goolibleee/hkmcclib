@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 
 export const BOOK_QUERY = gql`
     query AllBook{
-        books (sortBy: TITLE_ASC, limit:20000) {
+        book (limit:20000) {
             _id
             author
             title
@@ -22,12 +22,13 @@ export const BOOK_QUERY = gql`
 
 export const RENT_QUERY = gql`
     query AllRent{
-        rents (limit:20000) {
+        rent (limit:20000) {
             _id
             book_id
             user_id
             rent_date
             return_date
+            extend_count
             state
         }
     }
@@ -35,7 +36,7 @@ export const RENT_QUERY = gql`
 
 export const USERS_QUERY = gql`
     query AllUser {
-        users (limit: 20000) {
+        user (limit: 20000) {
             _id
             name
             state
@@ -44,8 +45,8 @@ export const USERS_QUERY = gql`
     }`;
 
 export const USER_QUERY = gql`
-    query FindUser($_id: String!){
-        user (query: {_id:$_id}) {
+    query FindUser($_id: string){
+        user (where: {_id: {_eq: $_id}}) {
             _id
             name
             state
@@ -56,8 +57,8 @@ export const USER_QUERY = gql`
     }`;
 
 export const HISTORY_QUERY = gql`
-    query findLogs($user_id: String!){
-        rentLogs (limit: 20000, query: {user_id: $user_id}) {
+    query findLogs($user_id: string){
+        rentLog (limit: 20000, where: {user_id: {_eq: $user_id}}) {
             _id
             book_id
             book_state
@@ -68,8 +69,8 @@ export const HISTORY_QUERY = gql`
     }`;
 
 export const HISTORY_BOOK_QUERY = gql`
-    query findLogs($book_id: String!){
-        rentLogs (limit: 20000, query: {book_id: $book_id}) {
+    query findLogs($book_id: string){
+        rentLog (limit: 20000, where: {book_id: {_eq: $book_id}}) {
             _id
             book_id
             book_state
@@ -80,8 +81,8 @@ export const HISTORY_BOOK_QUERY = gql`
     }`;
 
 export const HISTORY_PERIOD_QUERY = gql`
-    query findLogs ($fromTime: String!, $toTime: String!) {
-        rentLogs(limit: 20000, query: {AND: [{timestamp_gte: $fromTime}, {timestamp_lt: $toTime}]}) {
+    query findLogs ($fromTime: string, $toTime: string) {
+        rentLog(limit: 20000, where: {timestamp: {_gte: $fromTime, _lt: $toTime}}) {
             _id
             book_id
             book_state
@@ -93,7 +94,7 @@ export const HISTORY_PERIOD_QUERY = gql`
 
 export const NOTICE_QUERY = gql`
     query GetNotices {
-        notices (sortBy: _ID_DESC, limit:20000) {
+        notice (order_by: {date: asc}, limit:20000) {
             _id
             date
             title
@@ -101,8 +102,8 @@ export const NOTICE_QUERY = gql`
     }`;
 
 export const CONTENT_QUERY = gql`
-    query GetContent ($_id: String!) {
-        notice (query: {_id: $_id}) {
+    query GetContent ($_id: string) {
+        notice (where: {_id: {_eq: $_id}}) {
             _id
             date
             title
@@ -120,3 +121,16 @@ export const SERVER_QUERY = gql`
             proxy
         }
     }`;
+
+export const REQUEST_QUERY = gql`
+    query GetRequests($user_id: string) {
+        request (limit: 20000, where: {user_id: {_eq: $user_id}}) {
+            _id
+            user_id
+            action
+            state
+            book_id
+        }
+    }`;
+
+

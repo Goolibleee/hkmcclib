@@ -1,11 +1,14 @@
-import config from "./api/key";
+import {SQSClient, SendMessageCommand, ReceiveMessageCommand} from '@aws-sdk/client-sqs'
+import config from "./api/config";
 
 const NodeRSA = require('node-rsa');
 
-const prk = new NodeRSA(config["privateKey"]);
+
+
+const queueUri = config["queue_url"];
 
 class Context {
-    constructor() {
+    constructor(env) {
         console.log("Create Context");
 
         console.log("Cookies");
@@ -19,6 +22,19 @@ class Context {
                 acc[decodeURIComponent(key)] = decodeURIComponent(value);
                 return acc;
             }, {});
+        const aws_key = env.REACT_APP_AWSS_KEY1 + env.REACT_APP_AWSS_KEY2;
+        const aws_sec = env.REACT_APP_AWSS_SECRET1 + env.REACT_APP_AWSS_SECRET2;
+        const configObject =
+        {
+            region: config["region"],
+            credentials: {
+                accessKeyId: aws_key,
+                secretAccessKey: aws_sec
+            },
+        }
+        this.sqsClient = new SQSClient(configObject);
+//        this.prk = new NodeRSA(config["privateKey"]);
+        this.prk = new NodeRSA(env.REACT_APP_PRIVATE_KEY);
     }
 
     checkLogIn(user, passwordText) {
@@ -29,7 +45,7 @@ class Context {
             const emailDb = user["encrypted_email"];
             const phoneDb = user["encrypted_phone"];
 
-            passwordTyped = prk.sign(passwordText, 'base64');
+            passwordTyped = this.prk.sign(passwordText, 'base64');
             if (passwordText === emailDb ||
                 passwordText === phoneDb )
             {
@@ -49,7 +65,7 @@ class Context {
                     if (!isNaN(passwordText[i]))
                         numberString += passwordText[i];;
                 }
-                passwordTyped = prk.sign(numberString, 'base64');
+                passwordTyped = this.prk.sign(numberString, 'base64');
                 if (passwordTyped === phoneDb)
                 {
 //                    console.log("Phone match");
@@ -72,6 +88,60 @@ class Context {
             document.cookie = "password=" +  passwordTyped + "; expires=" + expireDate + " ; SameSite=Lax ;" ;
         }
         return matched
+    }
+
+    async sendRequest(body)
+    {
+        const deduplicationId = Math.floor(Math.random() * 100000000).toString();
+        try
+        {
+            const command = new SendMessageCommand({
+                MessageBody: body,
+                QueueUrl: queueUri,
+                MessageGroupId: "1",
+                MessageDeduplicationId: deduplicationId
+            });
+            await this.sqsClient.send(command);
+        }
+        catch (error)
+        {
+            console.log(error);
+        }
+    };
+
+    async receiveRequest()
+    {
+        console.log("Read request")
+        var requests = [];
+        try
+        {
+            const command = new ReceiveMessageCommand({
+                QueueUrl: queueUri,
+                AttributeNames: [""], // AttributeNameList
+                MessageAttributeNames: [ // MessageAttributeNameList
+                "STRING_VALUE",
+                ],
+                MaxNumberOfMessages: 100,
+                VisibilityTimeout: 5,
+                WaitTimeSeconds: 5
+            });
+            const results = await this.sqsClient.send(command);
+            console.log(results);
+            if (results.Messages !== undefined)
+            {
+                for (const result of results.Messages)
+                {
+                    const msg = JSON.parse(result.Body);
+                    requests.push(msg);
+                }
+            }
+        }
+        catch (error)
+        {
+            console.log(error);
+        }
+
+        return requests;
     }
 }
 

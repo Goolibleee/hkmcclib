@@ -1,10 +1,13 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import config from "./api/config";
 
-import * as Realm from "realm-web";
+
+
+//import * as Realm from "realm-web";
 import {
     ApolloClient,
     ApolloProvider,
@@ -12,6 +15,20 @@ import {
     InMemoryCache,
 } from "@apollo/client";
 
+
+const authToken = process.env.REACT_APP_HASURA_TOKEN;
+const client = new ApolloClient({
+    link: new HttpLink({
+        uri: config.graphql_url,
+        headers: {
+            'x-hasura-admin-secret': authToken
+        }
+    }),
+    cache: new InMemoryCache(),
+});
+
+
+/*
 const APP_ID = 'data-xaque';
 const graphqlUri = `https://realm.mongodb.com/api/client/v2.0/app/${APP_ID}/graphql`;
 const app = new Realm.App(APP_ID);
@@ -49,14 +66,16 @@ const client = new ApolloClient({
     }),
     cache: new InMemoryCache(),
 });
+*/
 
-ReactDOM.render(
+const container = document.getElementById('root')
+const root = createRoot(container);
+root.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
       <App />
     </ApolloProvider>
   </React.StrictMode>,
-  document.getElementById('root')
 );
 
 // If you want to start measuring performance in your app, pass a function

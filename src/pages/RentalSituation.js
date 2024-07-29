@@ -42,7 +42,7 @@ function RentHistory(props) {
             console.log(userLoading);
             if (userListData)
             {
-                const users = userListData.users;
+                const users = userListData.user;
 //                const users = userListData.user_tests;
                 var list = [];
                 console.log("User list available");
@@ -142,7 +142,7 @@ function RentHistory(props) {
         const id = rent["id"];
         const rentDate = rent["rentDate"];
         const retDate = rent["retDate"];
-        const bookName = rent["title"];
+//        const bookName = rent["title"];
         const userId = rent["user"];
         const userName = rent["userName"];
         const key = index.toString();
@@ -162,7 +162,9 @@ function RentHistory(props) {
                     </tr>
                     <tr key={key + "Title"} className="bookRow">
                         <td className="bookName">{claim}</td>
-                        <td colSpan="2" className="bookName">{bookName}</td>
+                        <td colSpan="2" className="bookName">
+                        {rent.totalName + " "}<b>{rent.title}</b>{" " + rent.claim_num}
+                        </td>
                     </tr>
                     <tr key={key + "Renter"} className="bookBottom">
                         <td className="bookCell"><Link to={"/userSearch/"+userId}> {userId} </Link></td>

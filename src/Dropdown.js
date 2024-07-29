@@ -9,10 +9,9 @@ function DropDown(props) {
 
     useEffect(
         () => {
-            function close() {
-                console.log("Close")
-                console.log(dropdown)
-                setDropdown(false);
+            function registerClose() {
+                console.log("Register close");
+                window.addEventListener("click", close);
             };
 
             if (props.doc.serverAvailable)
@@ -22,11 +21,10 @@ function DropDown(props) {
 
             if (dropdown)
             {
-                window.addEventListener("click", close);
+                setTimeout(registerClose, 100.);
             }
 
             const menu = document.getElementById("dropdown-menu");
-//            menu.hidden = !click;
             if (!dropdown)
             {
                menu.classList.remove('is-show');
@@ -36,17 +34,28 @@ function DropDown(props) {
                menu.classList.add('is-show');
             }
 
-            return function removeListener() {
+            return () => {
                 window.removeEventListener("click", close);
             }
 
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [dropdown, props.doc.logged, props.doc.serverAvailable]
     );
+
+    const close = () => {
+        console.log("Close")
+        console.log(dropdown)
+        setDropdown(false);
+        window.removeEventListener("click", close);
+    };
+
 
     const toggleMenu = () => {
         console.log("Click menu")
         setDropdown(!dropdown);
         console.log(dropdown)
+        if (dropdown)
+            window.removeEventListener("click", close);
     }
 
     const logOut = () =>
@@ -61,7 +70,7 @@ function DropDown(props) {
             <div className='menu' onClick={toggleMenu} >
                 <MenuIcon className="img" fontSize="large" sx={{ color: "#ffffff"}}/>
             </div>
-            <div id='dropdown-menu' onClick={() => { setDropdown(false)}} className='dropdown-menu'>
+            <div id='dropdown-menu' onClick={() => { close() }} className='dropdown-menu'>
                 {!props.doc.serverAvailable && props.doc.logged &&
                     <>
                     <div className='menu-items'>
@@ -118,7 +127,7 @@ function DropDown(props) {
                 {!props.doc.serverAvailable && props.doc.logged &&
                     <>
                         <hr className="hline"/>
-                        <div className='menu-items'>
+                        <div className='menu-items' onClick={logOut}>
                             {props.text.logOut}
                         </div>
                     </>

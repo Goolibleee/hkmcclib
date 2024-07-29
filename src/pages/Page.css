@@ -214,6 +214,18 @@ background-color: white;
     text-align: center;
 }
 
+#extend {
+    width: 80%;
+    font-size: 1.0rem;
+    margin:  10px;
+    border: 2px solid lightgray;
+    border-radius: 1rem;
+    outline: none;
+    padding: 5px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
 .idPrefix, #AA, #AB {
     padding: 1rem;
     margin-bottom: 1rem;

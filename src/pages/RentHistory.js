@@ -84,7 +84,7 @@ function RentHistory(props) {
             console.log(userLoading);
             if (userListData)
             {
-                const users = userListData.users;
+                const users = userListData.user;
 //                const users = userListData.user_tests;
                 var list = [];
                 console.log("User list available");
@@ -110,7 +110,7 @@ function RentHistory(props) {
 
 //            console.log(historyData.rentLog_tests)
 
-            const books = historyData.rentLogs;
+            const books = historyData.rentLog;
 //            const books = historyData.rentLog_tests;
             let results = [];
             let retDate = "";
@@ -144,6 +144,7 @@ function RentHistory(props) {
                     bookInfo.publish = ""
                     bookInfo.title = ""
                 }
+//                console.log(bookInfo)
                 const resultString = `${bookInfo.title} ${bookInfo.claim_num}`;
                 retDate = book.return_date;
                 let resultObject = {
@@ -154,6 +155,7 @@ function RentHistory(props) {
                     rentDate: book.timestamp,
                     retDate: retDate,
                     author: bookInfo.author,
+                    totalName: bookInfo.series,
                     claim_num: bookInfo.claim_num,
                     publish: bookInfo.publisher,
                     claim: bookInfo.claim,
@@ -163,7 +165,7 @@ function RentHistory(props) {
                 results.push(resultObject);
             }
             results.sort(compareRent);
-//            console.log(results);
+            console.log(results);
             setRentList(results);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -189,8 +191,8 @@ function RentHistory(props) {
         const id = rent["id"];
         const rentDate = rent["rentDate"];
         const retDate = rent["retDate"];
-        const bookName = rent["title"];
-        const claim = rent["claim"];
+//        const bookName = rent.totalName + " " + rent.title + " " + rent.claim_num
+        const claim = rent.claim;
         const userId = rent["user"];
         const userName = rent["userName"];
         const key = index.toString();
@@ -209,7 +211,9 @@ function RentHistory(props) {
                     </tr>
                     <tr key={key + "Title"} className="bookRow">
                         <td className="bookName">{claim}</td>
-                        <td colSpan="2" className="bookCell">{bookName}</td>
+                        <td colSpan="2" className="bookCell">
+                        {rent.totalName + " "}<b>{rent.title}</b>{" " + rent.claim_num}
+                        </td>
                     </tr>
                     <tr key={key + "Renter"} className="bookBottom">
                         <td className="bookCell"><Link to={"/userSearch/"+userId}> {userId} </Link></td>

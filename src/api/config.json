@@ -1,0 +1,6 @@
+{
+  "book_url":"https://raw.githubusercontent.com/linupa/hkmccBook/main/book.json",
+  "graphql_url":"https://hkmcc-library.hasura.app/v1/graphql",
+  "queue_url":"https://sqs.us-west-1.amazonaws.com/088564131385/HKMCCLibraryRequest.fifo",
+  "region": "us-west-1"
+}

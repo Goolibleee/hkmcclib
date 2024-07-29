@@ -2,18 +2,18 @@ import React, { useEffect, useState } from "react";
 import "./Page.css"
 import { useQuery, useLazyQuery } from "@apollo/client";
 import { SEARCH_PER_SCREEN } from "../Util";
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { useParams, Link } from "react-router-dom";
+import ListView from "../ListView";
 import {NOTICE_QUERY, CONTENT_QUERY} from "../api/query.js";
 
 function Notice(props) {
     const [searchResults, setSearchResults] = useState([]);
     const [displayedCodes, setDisplayedCodes] = useState([]);
     const [pageNum, setPageNum] = useState(0);
-    const [selectedId, setSelectedId] = useState(-1);
     const { loading: noticeLoading, data: noticeData, error: noticeError } = useQuery(NOTICE_QUERY);
+    const { id } = useParams();
     const [loadSelected, { loading: selectedLoading, data: selectedData, error: selectedError}] = useLazyQuery(CONTENT_QUERY,
-            {"variables": {"_id": selectedId}});
+            {"variables": {"_id": id}});
 
     useEffect(function () {
         async function initialize() {
@@ -32,7 +32,7 @@ function Notice(props) {
 //            console.log(noticeLoading);
             if (noticeData)
             {
-                setSearchResults(noticeData.notices);
+                setSearchResults(noticeData.notice);
             }
         }, [noticeData, noticeError, noticeLoading]
     );
@@ -75,17 +75,24 @@ function Notice(props) {
         }, [displayedCodes]
     );
 
-    const selectEntry = (id) => {
-        console.log("selected " + id.toString());
-        if (selectedId === id)
-        {
-            setSelectedId(-1);
-        }
-        else
-        {
-            setSelectedId(id);
-        }
-        loadSelected();
+    useEffect(
+        () => {
+            console.log("Select id: " + id);
+            if (id)
+            {
+                loadSelected();
+            }
+        }, [id, loadSelected]
+    );
+
+    const showEntries = (entries) => {
+        return (
+            <div id="noticeList">
+                <table><tbody>
+                   {displayedCodes.length > 0 && displayedCodes.map((result) => showEntry(result))}
+                </tbody></table>
+            </div>
+        );
     }
 
     const showEntry = (result) => {
@@ -93,23 +100,14 @@ function Notice(props) {
         return (
                 <tr className="" key={result._id}>
                     <td className=""> {result.date} </td>
-                    <td className="noticeEntry" colSpan="2" onClick={() => selectEntry(result._id)}> {result.title}</td>
+                    <td className="noticeEntry" colSpan="2">
+                        {id !== result._id &&
+                            (<Link to={"/notice/"+result._id}>{result.title}</Link>)}
+                        {id === result._id &&
+                            (<Link to={"/notice"}>{result.title}</Link>)}
+                    </td>
                 </tr>
         );
-    }
-
-    function movePrev() {
-        if (pageNum > 0)
-        {
-            setPageNum(pageNum - 1);
-        }
-    }
-
-    function moveNext() {
-        if (searchResults.length > (pageNum + 1) * SEARCH_PER_SCREEN)
-        {
-            setPageNum(pageNum + 1);
-        }
     }
 
     return (
@@ -119,36 +117,19 @@ function Notice(props) {
                         {props.text.notice}
                     </h2>
                 </div>
-                {selectedId > 0 && selectedData &&
-                <div id="noticeContent">
-                    <table className="content"><tbody>
-                           {showEntry(selectedData.notice)}
-                        <tr>
-                            <td className="content" colSpan="3">
-                                {selectedData.notice.content}
-                            </td>
-                        </tr>
-                    </tbody></table>
-                </div>
-                }
-                <div id="noticeList">
-                    <table><tbody>
-                       {displayedCodes.length > 0 && displayedCodes.map((result) => showEntry(result))}
-                    </tbody></table>
-                </div>
-                {searchResults.length > SEARCH_PER_SCREEN && (
-                    <div id="pageControl">
-                        <div className="page" id = "page">
-                            <NavigateBeforeIcon fontSize="large" sx={{color: (pageNum === 0) ? "#ffffff":"#404040"}} onClick={movePrev}/>
-                        </div>
-                        <div className="pageNum" id="pageNum">
-                            {pageNum+1}
-                        </div>
-                        <div className="page" id = "page">
-                            <NavigateNextIcon fontSize="large" sx={{color: (searchResults.length <= (pageNum + 1) * SEARCH_PER_SCREEN) ? "#ffffff":"#404040"}} onClick={moveNext}/>
-                        </div>
+                {id && selectedData &&
+                    <div id="noticeContent">
+                        <table className="content"><tbody>
+                               {showEntry(selectedData.notice[0])}
+                            <tr>
+                                <td className="content" colSpan="3">
+                                    {selectedData.notice[0].content}
+                                </td>
+                            </tr>
+                        </tbody></table>
                     </div>
-                )}
+                }
+                <ListView list={searchResults} showCallback={(entries) => { return showEntries(entries); }}/>
             </div>
             );
 }

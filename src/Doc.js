@@ -12,6 +12,7 @@ class Doc {
         this.userInfo = {};
         this.book = {};
         this.rent = {};
+        this.request = new Set();
         this.logCallback = undefined;
         this.admin = false;
         this.dueDate = "";
@@ -42,21 +43,26 @@ class Doc {
 
     async updateIpAddr()
     {
+        return;
 //        const response = await axios.get("https://ipv4.seeip.org/jsonip");
-//        const response = await axios.get("https://api.ipify.org/?format=json")
+/*
+        const response = await axios.get("https://api.ipify.org/?format=json")
         console.log("Get IP Address");
-//        console.log(response.data);
-//        const ipAddr = response.data.ip;
-//        console.log("IP addr updated " + ipAddr)
-//        this.ipAddr = ipAddr;
+        console.log(response.data);
+        const ipAddr = response.data.ip;
+        console.log("IP addr updated " + ipAddr)
+        this.ipAddr = ipAddr;
         this.checkServerIp()
+*/
     }
 
     checkServerIp()
     {
-//        if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
-//            return;
-//        if (this.serverInfo.globalIp === this.ipAddr)
+        return;
+/*
+        if (this.ipAddr.length === 0 || !this.serverInfo.globalIp)
+            return;
+        if (this.serverInfo.globalIp === this.ipAddr)
         {
             console.log("Server is accessible " + this.serverInfo.localIp);
             const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
@@ -69,7 +75,12 @@ class Doc {
                     this.dueDate = response.data.dueDate;
                     this.initialized = true;
                 })
+                .catch(error => {
+                  const query = "https://" + this.serverInfo.localIp + ":" + this.serverInfo.port + "/check";
+                  window.open(query);
+                });
         }
+*/
     }
 
 
@@ -93,6 +104,25 @@ class Doc {
         this.rentReady = true;
         this.checkState();
         this.checkRent();
+    }
+
+    setRequest(request) {
+//        console.log(request);
+        for (const entry of request)
+        {
+            this.request.add(entry.book_id);
+        }
+    }
+
+    hasRequest(entry)
+    {
+//        console.log(this.request);
+        return this.request.has(entry);
+    }
+
+    addRequest(entry)
+    {
+        this.request.add(entry)
     }
 
     setServerInfo(serverInfo)
@@ -120,6 +150,7 @@ class Doc {
 
     setBook(books) {
         this.book = {};
+        console.log("Register " + books.length + " books");
         for (let i = 0 ; i < books.length ; i++)
         {
             const book = books[i];
@@ -164,11 +195,19 @@ class Doc {
 //           console.log(userId);
 //           console.log(userId.length);
             if (userId && userId.length > 0 && userId in this.user)
-                this.user[userId]["rent"] += 1;
+            {
+                if ("rent" in this.user[userId])
+                    this.user[userId]["rent"] += 1;
+                else
+                    this.user[userId]["rent"] = 1;
+            }
             else
-                this.user[userId]["rent"] = 1;
+            {
+                console.log("Invalid user")
+                console.log(this.rent[i])
+            }
         }
-        console.log(this.user);
+//        console.log(this.user);
     }
 
     logIn(userInfo) {
@@ -180,12 +219,22 @@ class Doc {
             this.admin = true;
         if (this.logCallback)
             this.logCallback(true);
+        const userId = userInfo['_id'];
+        console.log(userId);
+        /*
+        for (const entry of this.request)
+        {
+            console.log(entry);
+        }
+        */
     }
 
     logOut() {
         console.log("Logged out");
         this.logged = false;
+        this.admin = false;
         this.userInfo = {};
+        this.request.clear();
         if (this.logCallback)
             this.logCallback(false);
     }
@@ -205,7 +254,17 @@ class Doc {
                 for (const entry of result.data.return.books)
                 {
                     console.log(entry);
-                    const book = {'id': entry.BARCODE, 'title': entry.BOOKNAME, 'claim': entry.CLAIM, 'rentDate': entry.LENT_DATE, 'retDate': entry.RETURN_DATE, 'stat': entry.STATS, 'extendCount': entry._EXTEND_COUNT}
+                    const book = {
+                        'id': entry.BARCODE,
+                        'title': entry.BOOKNAME,
+                        'claim': entry.CLAIM,
+                        'claim_num': entry.CLAMENUM,
+                        'totalName': entry.TOTAL_NAME,
+                        'rentDate': entry.LENT_DATE,
+                        'retDate': entry.RETURN_DATE,
+                        'stat': entry.STATS,
+                        'extendCount': entry._EXTEND_COUNT
+                    };
                     ret.push(book);
                 }
 //                ret = result.data.return.books;
@@ -227,14 +286,17 @@ class Doc {
     //            console.log(entry);
                 const id = entry["book_id"];
                 const book = this.book[id];
-    //            console.log(book)
-                let retEntry = {}
-                retEntry["id"] = book._id
-                retEntry["title"] = book.title
-                retEntry["rentDate"] = entry.rent_date.split(" ")[0].replace("-","/",2).replace("-", "/")
-                retEntry["retDate"] = entry.return_date.split(" ")[0].replace("-","/",2).replace("-", "/")
-                retEntry["claim"] = book.claim
+//                console.log(book)
+                let retEntry = {};
+                retEntry["id"] = book._id;
+                retEntry["title"] = book.title;
+                retEntry['claim_num'] = book.claim_num;
+                retEntry['totalName'] = book.series;
+                retEntry["rentDate"] = entry.rent_date.split(" ")[0].replace("-","/",2).replace("-", "/");
+                retEntry["retDate"] = entry.return_date.split(" ")[0].replace("-","/",2).replace("-", "/");
+                retEntry["claim"] = book.claim;
                 retEntry["user"] = entry.user_id;
+                retEntry['extendCount'] = entry.extend_count;
                 ret.push(retEntry)
             }
         }

@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { toastProp, loggingId, compareRent } from "../Util";
 import { useLazyQuery } from "@apollo/client";
 import { Link, Navigate } from 'react-router-dom'
-import {USER_QUERY, HISTORY_QUERY} from "../api/query.js";
+import {USER_QUERY, HISTORY_QUERY, REQUEST_QUERY} from "../api/query.js";
 //import {USER_QUERY, HISTORY_QUERY} from "../api/query_test.js";
 import ListView from "../ListView";
 
@@ -14,6 +14,8 @@ const State = {
     LoggedIn:  2
 }
 
+const MAX_EXTEND = 1;
+
 function CheckOutStatus(props) {
     const [userText, setUserText] = useState("");
     const [passwordText, setPasswordText] = useState("");
@@ -22,10 +24,13 @@ function CheckOutStatus(props) {
     const [userId, setUserId] = useState("");
     const [state, setState] = useState(State.LoggedOut);
     const [history, setHistory] = useState([]);
+    const [extendCount, setExtendCount] = useState(0);
     const [autoLogin, setAutoLogin] = useState(false);
     const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY,
                      { "variables": { "_id": userId } });
     const [loadHistory, { data: historyData }] = useLazyQuery(HISTORY_QUERY,
+                     { "variables": { "user_id": userId } });
+    const [loadRequest, { data: requestData }] = useLazyQuery(REQUEST_QUERY,
                      { "variables": { "user_id": userId } });
     const [expireDate, setExpireDate] = useState("");
     const [title, setTitle] = useState("");
@@ -85,8 +90,9 @@ function CheckOutStatus(props) {
             if (!historyData || !props.doc.bookReady || !props.doc.rentReady)
                 return;
             console.log("History updated ");
+//            console.log(historyData)
             let hist = [];
-            const rentLogs = historyData.rentLogs;
+            const rentLogs = historyData.rentLog;
 //            const rentLogs = historyData.rentLog_tests;
             for (let i = 0 ; i < rentLogs.length ; i++)
             {
@@ -95,13 +101,22 @@ function CheckOutStatus(props) {
                     continue;
                 if (! ("return_date" in entry) || ! entry.return_date)
                     continue;
-                console.log(entry);
+//                console.log(entry);
                 const id = entry.book_id;
-                const title = (id in props.doc.book) ? props.doc.book[id].title : "N/A";
+                if (!(id in props.doc.book))
+                    continue;
+
+                const book = props.doc.book[id];
+//                console.log(book)
+                const title = book.title;
+                const claim = book.claim;
                 const date = entry.timestamp.split(" ")[0].replace("-", "/", 2).replace("-", "/")
-                const retDate = entry.return_date;
-                const claim = (id in props.doc.book) ? props.doc.book[id].claim : "N/A";
-                hist.push({"id": id, "title": title, "rentDate": date, "retDate": retDate, "claim": claim});
+                const retDate = entry.return_date.split(" ")[0].replace("-", "/", 2).replace("-", "/")
+                hist.push(
+                    {"id": id, "title": title, "rentDate": date, "retDate": retDate, "claim": claim,
+                     "totalName": book.series, "claim_num": book.claim_num
+                    }
+                );
 
             }
             hist.sort(compareRent);
@@ -110,6 +125,18 @@ function CheckOutStatus(props) {
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [historyData, props.doc.bookReady, props.doc.rentReady]
+    );
+
+    useEffect(
+        () => {
+            console.log("Request data");
+            if (requestData)
+            {
+                console.log("Request available");
+                props.doc.setRequest(requestData.request)
+            }
+        },
+        [requestData]
     );
 
     async function updateDoc()
@@ -121,7 +148,9 @@ function CheckOutStatus(props) {
             const userId = props.doc.userInfo['_id'];
             setUserId(userId);
             setSearchResults(await props.doc.getRent(userId));
+            console.log(props.doc.getRent(userId));
             await loadHistory();
+            await loadRequest();
         }
         else
         {
@@ -146,13 +175,25 @@ function CheckOutStatus(props) {
         setInitialized(true);
     }
 
-    const showRented = (rent, index) => {
+    const showRented = (rent, index, history) => {
         const id = rent["id"];
         const rentDate = rent["rentDate"];
         const retDate = rent["retDate"];
-        const bookName = rent["title"];
         const claim = rent["claim"];
         const key = index.toString();
+        const extendCount = rent.extendCount;
+        const maxExtended = extendCount >= MAX_EXTEND;
+        let titleRowSpan;
+        let extending;
+        if (history)
+        {
+            titleRowSpan = "1"
+        }
+        else
+        {
+            extending = props.doc.hasRequest(id);
+            titleRowSpan = "2"
+        }
         return (<React.Fragment key={key + "Fragment"}>
                     <tr key={key} className="bookData">
                         <td className="bookData"><Link to={"/search/"+id}>{id}</Link></td>
@@ -161,8 +202,21 @@ function CheckOutStatus(props) {
                     </tr>
                     <tr key={key + "Title"} className="bookName">
                         <td className="bookName">{claim}</td>
-                        <td colSpan="2" className="bookName">{bookName}</td>
+                        <td colSpan="2" rowSpan={titleRowSpan} className="bookName">
+                            {rent.totalName + " "}<b>{rent.title}</b>{" " + rent.claim_num}
+                        </td>
                     </tr>
+                    {!history &&
+                        <tr key={key + "Extend"} className="bookExtend">
+                            <td className="bookExtend"> <button id="extend" onClick={async () => extend(id)}
+                                disabled={extending || maxExtended}>
+                                {maxExtended && props.text.maxExtend}
+                                {(extending && !maxExtended) && props.text.extending}
+                                {!(extending || maxExtended) && props.text.extend}
+                                ({extendCount})
+                            </button></td>
+                        </tr>
+                    }
                 </React.Fragment>
                 );
     }
@@ -176,7 +230,12 @@ function CheckOutStatus(props) {
         setAutoLogin(!autoLogin);
     }
 
-    const showEntries = (result, retText) => {
+    const showEntries = (result, history) => {
+        let retText;
+        if (history)
+            retText = props.text.returnDate;
+        else
+            retText = props.text.dueDate;
         return (<div>
                     <table><tbody>
                     <tr key="ID">
@@ -186,7 +245,7 @@ function CheckOutStatus(props) {
                     </tr>
                     {
                         result.map((rent, index) => {
-                            return showRented(rent, index);
+                            return showRented(rent, index, history);
                         })
                     }
                     {
@@ -201,8 +260,26 @@ function CheckOutStatus(props) {
         setUserId(userText.toUpperCase());
         await loadUser();
         await loadHistory();
+        await loadRequest();
         console.log("Log In");
         await compare();
+    }
+
+    const extend = async (bookId) => {
+        console.log("Extend");
+        const date = new Date().toISOString().replace("T", " ").replace("Z", "");
+        console.log(date);
+        const request =
+            "{\n" +
+            " \"user_id\": \"" + userId + "\",\n" +
+            " \"book_id\": \"" + bookId + "\",\n" +
+            " \"date\": \"" + date + "\",\n" +
+            " \"action\": \"extend\"\n" +
+            "}\n"
+
+        props.context.sendRequest(request);
+        props.doc.addRequest(bookId);
+        setExtendCount(extendCount + 1);
     }
 
     const compare = async () => {
@@ -212,10 +289,12 @@ function CheckOutStatus(props) {
         console.log(toast.isActive(loggingId));
         const prop = toastProp;
 
+        console.log(passwordText);
         let text;
-        if (props.context.checkLogIn(userData.user, passwordText))
+        const user = userData.user[0];
+        if (props.context.checkLogIn(user, passwordText))
         {
-            props.doc.logIn(userData.user);
+            props.doc.logIn(user);
 
             setSearchResults(await props.doc.getRent(userId));
             setState(State.LoggedIn);
@@ -279,11 +358,11 @@ function CheckOutStatus(props) {
             </div>
             <div id="checkOutResult" hidden={!(state === State.LoggedIn)}>
                 <div>
-                    { showEntries(searchResults, props.text.dueDate) }
+                    { showEntries(searchResults, false) }
                 </div>
 
                 <div id="name">{props.text.history}</div>
-                <ListView list={history} showCallback={(entries) => { return showEntries(entries, props.text.returnDate); }}/>
+                <ListView list={history} showCallback={(entries) => { return showEntries(entries, true); }}/>
             </div>
         </div>
     );

@@ -85,7 +85,7 @@ function CheckOut(props) {
             console.log(userLoading);
             if (userListData)
             {
-                const users = userListData.users;
+                const users = userListData.user;
 //                const users = userListData.user_tests;
                 var list = [];
                 console.log("User list available");

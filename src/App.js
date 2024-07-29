@@ -25,11 +25,12 @@ import { toastProp, loadingId } from "./Util";
 import { useQuery, useLazyQuery } from "@apollo/client";
 import Navbar from "./Navbar";
 import {SERVER_QUERY} from "./api/query.js";
-import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query.js";
+import {RENT_QUERY, USER_QUERY, REQUEST_QUERY} from "./api/query.js";
+import config from "./api/config";
 //import {BOOK_QUERY, RENT_QUERY, USER_QUERY} from "./api/query_test.js";
 
 const doc = new Doc();
-const context = new Context();
+const context = new Context(process.env);
 
 const textString = {};
 let logMsg = ""
@@ -40,8 +41,10 @@ function App() {
     const [logged, setLogged] = useState(false);
     const [userId, setUserId] = useState("");
     const { loading: rentLoading, error: rentError, data: rentData } = useQuery(RENT_QUERY);
+    const [loadRequest, { data: requestData }] = useLazyQuery(REQUEST_QUERY,
+                     { "variables": { "user_id": userId } });
     const { loading: serverLoading, error: serverError, data: serverData } = useQuery(SERVER_QUERY);
-    const [loadBook, { loading: bookLoading, error: bookError, data: bookData }] = useLazyQuery(BOOK_QUERY);
+//    const [loadBook, { loading: bookLoading, error: bookError, data: bookData }] = useLazyQuery(BOOK_QUERY);
     const [loadUser, { data: userData }] = useLazyQuery(USER_QUERY, { "variables": { "_id": userId } });
 
     useEffect(function () {
@@ -50,8 +53,9 @@ function App() {
             console.log("Platform: ");
             console.log(navigator.platform);
             logMsg = logMsg + "<p>Initialize app</p>";
-            console.log(process.env.APP_NAME);
-            console.log(process.env.APP_VERSION);
+            console.log(process.env.REACT_APP_NAME);
+            console.log(process.env.REACT_APP_VERSION);
+            console.log(process.env.REACT_APP_QUEUE_URL);
             const lang = navigator.languages;
             console.log(lang);
             let ts = {}
@@ -91,13 +95,14 @@ function App() {
             }
 
 //            console.log("Login check " + context.cookie.password);
-            const user = userData.user
+            const user = userData.user[0]
 //            const user = userData.user_test
 //            console.log(user);
             if (context.cookie.password && context.checkLogIn(user, context.cookie.password))
             {
                 console.log("Login suceeded");
                 doc.logIn(user);
+                loadRequest();
             }
 
 
@@ -115,8 +120,8 @@ function App() {
             {
                 console.log("Rent available");
                 logMsg = logMsg + "<p>Rent available</p>"
-//                console.log(rentData.rents)
-                doc.setRent(rentData.rents)
+//                console.log(rentData.rent)
+                doc.setRent(rentData.rent)
 //                doc.setRent(rentData.rent_tests)
                 if (doc.initialized)
                     notifyInit()
@@ -124,6 +129,19 @@ function App() {
         }, [rentLoading, rentError, rentData]
     );
 
+    useEffect(
+        () => {
+            console.log("Request Query Updated");
+            if (requestData)
+            {
+                console.log("Request available");
+                doc.setRequest(requestData.request)
+//                doc.setRent(rentData.rent_tests)
+            }
+        }, [requestData]
+    );
+
+/*
     useEffect(
         () => {
             console.log("Book Query Updated");
@@ -135,13 +153,14 @@ function App() {
                 console.log("Book available")
                 logMsg = logMsg + "<p>Book available</p>";
 //                console.log(bookData.books)
-                doc.setBook(bookData.books)
+                doc.setBook(bookData.book)
 //                doc.setBook(bookData.book_tests)
                 if (doc.initialized)
                     notifyInit()
             }
         }, [bookLoading, bookError, bookData]
     );
+*/
 
     useEffect(
         () => {
@@ -161,15 +180,40 @@ function App() {
             if (!doc.serverAvailable)
             {
                 console.log("Server is not available. Load books from cloud DB");
-                loadBook();
+//                loadBook();
                 const prop = toastProp;
                 prop.type = toast.TYPE.LOADING;
                 prop.autoClose = false;
                 prop.toastId = loadingId;
                 toast.loading(textString.loading, prop);
                 doc.setLogCallback(updateLog);
+
+                console.log("Get github file");
+                doc.requestGet(config.book_url, {}).then(function (response) {
+/*
+                    const zipData = response.data;
+                    console.log(typeof(zipData));
+                    console.log(zipData.substring(0,50));
+                    console.log(zipData.length);
+                    zlib.gunzip(zipData, (err, buffer) => {
+                        console.log("Unzipped ");
+                        console.log(buffer)
+                    });
+*/
+                    const data = response.data;
+                    console.log("Downloaded books");
+                    const bookList = []
+                    for (let key in data)
+                    {
+                        const entry = data[key];
+                        bookList.push(entry);
+                    }
+                    doc.setBook(bookList);
+                    if (doc.initialized)
+                        notifyInit()
+                });
             }
-        }, [serverLoading, serverError, serverData, loadBook, initialized]
+        }, [serverLoading, serverError, serverData, initialized]
     );
 
     function notifyInit()
@@ -206,7 +250,7 @@ function App() {
             <Navbar doc={doc} text={textString}/>
             <Routes>
                 <Route path="/" element={<Home doc={doc} text={textString}/>} />
-                <Route path="/notice" element={<Notice doc={doc} text={textString} />} />
+                <Route path="/notice/:id?" element={<Notice doc={doc} text={textString} />} />
                 <Route path="/search/:id?" element={<Search doc={doc} text={textString}/>} />
                 <Route path="/checkOutStatus" element={<CheckOutStatus context={context} doc={doc} text={textString} logged={logged}/>} />
                 <Route path="/userSearch/:id?" element={<UserSearch context={context} doc={doc} text={textString} />} />
